@@ -1,0 +1,101 @@
+/* Rich Text Editor styles */
+.editor-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.editor-container {
+  width: 800px;
+  height: 600px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.toolbar {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  background: #f8f9fa;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 4px;
+  padding: 0 8px;
+  border-right: 1px solid #e5e7eb;
+}
+
+.toolbar-group:last-child {
+  border-right: none;
+  margin-left: auto;
+}
+
+
+.toolbar button {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1f2937 !important;
+  font-size: 22px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toolbar button svg {
+  color: inherit !important;
+  fill: none;
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.toolbar button:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.save-btn {
+  color: #2563eb !important;
+}
+
+.close-btn {
+  color: #ef4444 !important;
+}
+
+.editor-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  outline: none;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #111827;
+  background: white;
+  min-height: 100px;
+  word-break: break-word;
+}
+
+.editor-content[contenteditable]:empty:before {
+  content: 'Start typing...';
+  color: #9ca3af;
+}

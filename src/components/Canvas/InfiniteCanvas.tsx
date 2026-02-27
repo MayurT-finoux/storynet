@@ -24,6 +24,7 @@ export interface InfiniteCanvasProps {
   characters: Character[];
   onGenerateNetwork: () => Record<string, any>;
   onImportNetwork: (elements: CanvasElementData[], connections: ConnectionData[]) => void;
+  onUpdateStatus: (elementId: string, status: 'draft'|'idea'|'done') => void;
 }
 
 const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
@@ -42,6 +43,14 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
 }: InfiniteCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+
+  // status dropdown constants
+  const statuses: Array<'draft'|'idea'|'done'> = ['draft','idea','done'];
+
+  const updateStatus = (elementId: string, status: 'draft'|'idea'|'done') => {
+    onUpdateStatus(elementId, status);
+    setTagMenuFor(null);
+  };
   const [scale, setScale] = useState(INIT_SCALE);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -58,6 +67,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
   const [showJsonModal, setShowJsonModal] = useState(false);
   const [jsonInput, setJsonInput] = useState('');
   const [isImportMode, setIsImportMode] = useState(false);
+  const [tagMenuFor, setTagMenuFor] = useState<string | null>(null);
   const [draggedItemType, setDraggedItemType] = useState<'page' | 'text' | null>(null);
   const [draggedItemPosition, setDraggedItemPosition] = useState({ x: 0, y: 0 });
 
@@ -1056,6 +1066,49 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                 }}
               />
             </div>
+            {/* status label/dropdown */}
+            {element.type === 'page' && (
+              <div
+                onClick={(e)=>{e.stopPropagation(); setTagMenuFor(prev=> prev===element.id ? null : element.id);}}
+                style={{
+                  position: 'absolute',
+                  bottom: -14,
+                  left: 8,
+                  background: '#000',
+                  padding: '2px 8px',
+                  borderRadius: 9999,
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  zIndex: 90,
+                  color: '#fff',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <span style={{textTransform:'capitalize'}}>{element.status || 'draft'}</span>
+                {tagMenuFor === element.id && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    background: 'white',
+                    border: '1px solid #e5e7eb',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                    borderRadius: 8,
+                    padding: 8,
+                    zIndex: 200,
+                    minWidth: 100,
+                  }}>
+                    {statuses.map(s => (
+                      <div key={s} style={{padding:'4px 8px', cursor:'pointer'}}
+                        onClick={(e)=>{e.stopPropagation(); updateStatus(element.id, s); setTagMenuFor(null);}}
+                      >
+                        {s.charAt(0).toUpperCase() + s.slice(1)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -1383,7 +1436,9 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                             width: 180,
                             height: 254,
                             content: pageData.text,
-                            pageId: pageData.pageid
+                            pageId: pageData.pageid,
+                            status: pageData.status || 'draft',
+                            label: pageData.label || ''
                           };
                           newElements.push(newPage);
                         });

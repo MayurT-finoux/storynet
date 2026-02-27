@@ -15,7 +15,8 @@ function App() {
       width: 180,
       height: 254,
       label: 'Draft',
-      pageId: 'PG-A7B9-C2D4'
+      pageId: 'PG-A7B9-C2D4',
+      status: 'draft',
     }
   ]);
 
@@ -52,6 +53,8 @@ function App() {
       width: 180,
       height: 254,
       pageId,
+      status: 'draft',
+      label: ''
     };
     setElements(prev => [...prev, newPage]);
   };
@@ -114,6 +117,12 @@ function App() {
     setCharacters(prev => [...prev, newCharacter]);
   };
 
+  const handleUpdateStatus = (elementId: string, status: 'draft'|'idea'|'done') => {
+    setElements(prev => prev.map(el =>
+      el.id === elementId ? { ...el, status } : el
+    ));
+  };
+
   const handleUpdateCharacter = (id: string, character: Omit<Character, 'id'>) => {
     setCharacters(prev => prev.map(char => 
       char.id === id ? { ...character, id } : char
@@ -144,6 +153,7 @@ function App() {
         pageid: page.pageId,
         cordinates: `${page.x},${page.y}`,
         text: page.content || '',
+        status: page.status || 'draft',
         next: connectedPages.map(connectedPageKey => {
           const connectedPage = pages.find((p, i) => `page${i + 1}` === connectedPageKey);
           return connectedPage?.pageId || '';
@@ -172,6 +182,7 @@ function App() {
           setElements(newElements);
           setConnections(newConnections);
         }}
+          onUpdateStatus={handleUpdateStatus}
       />
       
       <CharacterModal

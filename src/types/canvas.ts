@@ -8,6 +8,7 @@ export interface CanvasElementData {
   content?: string;
   label?: string;
   pageId?: string; // Hidden ID for pages with PG prefix
+  status?: 'draft' | 'idea' | 'done'; // page workflow status
 }
 
 export interface ConnectionData {

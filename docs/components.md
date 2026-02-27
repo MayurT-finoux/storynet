@@ -61,6 +61,7 @@ src/components/Canvas/RichTextPage.jsx
 - Resizable container
 - Connection management
 - Drag and drop positioning
+- **Status label**: each page displays a small **capsule‑shaped** label (`draft` by default) attached to the bottom-left border. Clicking the label opens a dropdown **below** it so you can choose `draft`, `idea`, or `done`; the menu stays open until an option is clicked. The capsule is black with white text.
 
 ### Styled Components
 

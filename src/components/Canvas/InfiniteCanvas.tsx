@@ -1388,18 +1388,24 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                           newElements.push(newPage);
                         });
                         
-                        // Create connections
+                        // Create connections (skip duplicates and reciprocal links)
                         Object.entries(network).forEach(([pageKey, pageData]: [string, any]) => {
                           if (pageData.next && pageData.next.length > 0) {
                             const fromElement = newElements.find(el => el.pageId === pageData.pageid);
                             pageData.next.forEach((nextPageId: string) => {
                               const toElement = newElements.find(el => el.pageId === nextPageId);
                               if (fromElement && toElement) {
-                                newConnections.push({
-                                  id: `conn-${Date.now()}-${Math.random()}`,
-                                  fromId: fromElement.id,
-                                  toId: toElement.id
-                                });
+                                const alreadyExists = newConnections.some(conn =>
+                                  (conn.fromId === fromElement.id && conn.toId === toElement.id) ||
+                                  (conn.fromId === toElement.id && conn.toId === fromElement.id)
+                                );
+                                if (!alreadyExists) {
+                                  newConnections.push({
+                                    id: `conn-${Date.now()}-${Math.random()}`,
+                                    fromId: fromElement.id,
+                                    toId: toElement.id
+                                  });
+                                }
                               }
                             });
                           }

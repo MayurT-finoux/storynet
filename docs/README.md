@@ -1,28 +1,23 @@
 # StoryNet Documentation
 
-Welcome to the StoryNet documentation. This documentation will help you understand the project structure, components, and how to use or contribute to the project.
+This folder contains module‑based documentation for the StoryNet application. The old single‑file documents have been superseded; use the files listed below and update them when behaviours change.
 
-## Table of Contents
+## Core Documents
 
-1. [Project Overview](./overview.md)
-2. [Canvas Features](./canvas-features.md)
-3. [Components](./components.md)
-4. [User Guide](./user-guide.md)
+- [Project Overview](./PROJECT_OVERVIEW.md) – high‑level description and architecture
+- [Canvas Module](./CANVAS_MODULE.md) – pan/zoom surface and element logic
+- [Text & Page Module](./TEXT_MODULE.md) – the page component and rich‑text editor
+- [Connections Module](./CONNECTIONS_MODULE.md) – page linking behaviour
+- [Characters Module](./CHARACTERS_MODULE.md) – character management and highlighting
+- [Developer & GPT Guidelines](./DEVELOPER_GUIDELINES.md) – rules for contributors and assistants
 
-## Quick Start
+## Quick Start (same as before)
 
-StoryNet is a React-based infinite canvas application that allows users to create, connect, and manage rich text cards in a freeform space.
-
-### Key Features
-
-- Infinite Canvas with zoom and pan capabilities
-- Rich text cards with resizable containers
-- Card connections and relationships
-- Intuitive drag-and-drop interface
-
-### Getting Started
-
-1. Clone the repository
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd storynet
+   ```
 2. Install dependencies:
    ```bash
    npm install
@@ -32,4 +27,4 @@ StoryNet is a React-based infinite canvas application that allows users to creat
    npm run dev
    ```
 
-For detailed information about specific features, please refer to the corresponding documentation sections.
+Navigating through the module files will give you detailed information about each feature and its implementation.

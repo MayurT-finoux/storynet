@@ -49,7 +49,9 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
   const statuses: Array<'draft'|'idea'|'done'> = ['draft','idea','done'];
 
   const updateStatus = (elementId: string, status: 'draft'|'idea'|'done') => {
-    onUpdateStatus(elementId, status);
+    setElements(prev => prev.map(el =>
+      el.id === elementId ? { ...el, status } : el
+    ));
     setTagMenuFor(null);
   };
   const [scale, setScale] = useState(INIT_SCALE);
@@ -870,6 +872,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
             onMouseLeave={() => setHoveredElement(null)}
             onMouseDown={(e) => {
               if (e.detail === 2) return; // Ignore mousedown on double-click
+              if ((e.target as HTMLElement).closest('[data-status-dropdown]')) return; // Ignore clicks on status dropdown
               handleElementMouseDown(e, element.id);
             }}
             onDoubleClick={(e) => {
@@ -1070,8 +1073,496 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
             {/* status label/dropdown */}
             {element.type === 'page' && (
               <div
+                      >
+                        {s.charAt(0).toUpperCase() + s.slice(1)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Zoom controls */}
+      <div style={{
+        position: 'fixed',
+        bottom: 24,
+        right: 24,
+        zIndex: 50,
+        background: 'white',
+        borderRadius: 12,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        border: '1px solid #e5e7eb',
+        padding: 12,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        alignItems: 'center',
+      }}>
+        <button onClick={handleZoomIn} title="Zoom In" style={iconBtnStyle}>
+          <ZoomIn size={20} />
+        </button>
+        <button onClick={handleZoomOut} title="Zoom Out" style={iconBtnStyle}>
+          <ZoomOut size={20} />
+        </button>
+        <button onClick={handleResetView} title="Reset View" style={iconBtnStyle}>
+          <Maximize2 size={20} />
+        </button>
+        <div style={{ width: '100%', height: 1, background: '#e5e7eb', margin: '8px 0' }} />
+        <button onClick={togglePattern} title={patternType === 'grid' ? 'Switch to Dots' : 'Switch to Grid'} style={iconBtnStyle}>
+          {patternType === 'grid' ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="6" cy="6" r="2" />
+              <circle cx="6" cy="18" r="2" />
+              <circle cx="18" cy="6" r="2" />
+              <circle cx="18" cy="18" r="2" />
+            </svg>
+          ) : (
+            <Grid3x3 size={20} />
+          )}
+        </button>
+        <div style={{ textAlign: 'center', fontSize: 12, color: '#666', marginTop: 4 }}>{Math.round(scale * 100)}%</div>
+      </div>
+
+      {/* Page Editor Modal */}
+      {editingElement && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 1000,
+          background: 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px',
+        }}
+        onClick={() => setEditingElement(null)}>
+          {/* Main Editor Page - Exactly like page card but larger */}
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+            display: 'flex',
+            flexDirection: 'column',
+            width: '100%',
+            maxWidth: '500px',
+            height: '600px',
+            border: '1.5px solid #ececf0',
+            overflow: 'hidden',
+            position: 'relative',
+          }}
+          onClick={(e) => e.stopPropagation()}>
+            {/* Content Area - Editable, matches page cards padding */}
+            <div
+              ref={editorRef}
+              id="page-content-editor"
+              contentEditable
+              suppressContentEditableWarning={true}
+              style={{
+                flex: 1,
+                padding: '16px',
+                overflow: 'auto',
+                outline: 'none',
+                fontSize: '16px',
+                lineHeight: '1.6',
+                color: '#111827',
+                background: '#ffffff',
+                fontFamily: 'inherit',
+              }}
+              onInput={(e) => {
+                // Simple auto-save - don't manipulate HTML
+                const content = (e.currentTarget as HTMLDivElement).innerHTML;
+                setElements(prev => prev.map(el =>
+                  el.id === editingElement ? { ...el, content } : el
+                ));
+              }}
+            ></div>
+            
+            {/* Highlight Overlay - Shows character names in red without breaking cursor */}
+            {editingElement && elements.find(el => el.id === editingElement) && (
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: highlightCharacters(elements.find(el => el.id === editingElement)?.content || '')
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  padding: '16px',
+                  fontSize: '16px',
+                  lineHeight: '1.6',
+                  color: 'transparent',
+                  background: 'transparent',
+                  pointerEvents: 'none',
+                  overflow: 'auto',
+                  fontFamily: 'inherit',
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                }}
+              ></div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Instructions */}
+      <div style={{
+        position: 'fixed',
+        bottom: 24,
+        left: 24,
+        zIndex: 50,
+        background: 'white',
+        borderRadius: 12,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        border: '1px solid #e5e7eb',
+        padding: 16,
+        fontSize: 14,
+        color: '#666',
+      }}>
+        <div><b>Pan:</b> Drag Canvas</div>
+        <div><b>Zoom:</b> Ctrl/Cmd + Scroll</div>
+        <div><b>Connect:</b> Click icon on page</div>
+        <div><b>Cancel:</b> Press Esc</div>
+      </div>
+
+      {/* Position Tooltip - Shows coordinates on page hover */}
+      {hoveredElement && elements.find(el => el.id === hoveredElement)?.type === 'page' && (
+        <div style={{
+          position: 'fixed',
+          bottom: 24,
+          right: 100,
+          zIndex: 50,
+          background: 'white',
+          borderRadius: 12,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          border: '1px solid #e5e7eb',
+          padding: '12px 16px',
+          fontSize: 13,
+          color: '#374151',
+          fontFamily: 'monospace',
+          fontWeight: '500',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px',
+        }}>
+          <div>X: {Math.round(elements.find(el => el.id === hoveredElement)?.x || 0)}</div>
+          <div>Y: {Math.round(elements.find(el => el.id === hoveredElement)?.y || 0)}</div>
+        </div>
+      )}
+
+      {/* User Icon - Top Right */}
+      <button
+        onClick={onOpenCharacterModal}
+        style={{
+          position: 'fixed',
+          top: 24,
+          right: 24,
+          zIndex: 51,
+          background: '#fff',
+          borderRadius: 12,
+          boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+          border: '1.5px solid #e5e7eb',
+          padding: '10px 12px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.2s',
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background = '#f5f5f7';
+          (e.currentTarget as HTMLButtonElement).style.borderColor = '#d1d5db';
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background = '#fff';
+          (e.currentTarget as HTMLButtonElement).style.borderColor = '#e5e7eb';
+        }}
+      >
+        <User size={20} color="#222" />
+      </button>
+
+      {/* JSON Modal */}
+      {showJsonModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 1000,
+          background: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+        }} onClick={() => setShowJsonModal(false)}>
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+            width: '100%',
+            maxWidth: '600px',
+            maxHeight: '80vh',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+          }} onClick={(e) => e.stopPropagation()}>
+            
+            <div style={{
+              padding: '20px',
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>
+                {isImportMode ? 'Import JSON' : 'Page Network JSON'}
+              </h2>
+              {!isImportMode && (
+                <button onClick={() => setIsImportMode(true)} style={{
+                  background: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                }}>
+                  Import JSON
+                </button>
+              )}
+              <button onClick={() => setShowJsonModal(false)} style={{
+                background: 'none',
+                border: 'none',
+                padding: '8px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
+              {isImportMode ? (
+                <>
+                  <textarea
+                    value={jsonInput}
+                    onChange={(e) => setJsonInput(e.target.value)}
+                    placeholder="Paste your JSON here..."
+                    autoFocus
+                    style={{
+                      width: '100%',
+                      height: '300px',
+                      padding: '16px',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontFamily: 'Monaco, Consolas, monospace',
+                      resize: 'vertical',
+                      outline: 'none',
+                      color: '#000',
+                      background: '#ffffff',
+                      boxSizing: 'border-box',
+                      lineHeight: '1.5',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#2563eb';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb';
+                    }}
+                  />
+                  <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
+                    <button onClick={() => {
+                      try {
+                        const trimmedInput = jsonInput.trim();
+                        if (!trimmedInput) {
+                          alert('Please paste JSON code first');
+                          return;
+                        }
+                        const network = JSON.parse(trimmedInput);
+                        const newElements: CanvasElementData[] = [];
+                        const newConnections: ConnectionData[] = [];
+                        
+                        Object.entries(network).forEach(([pageKey, pageData]: [string, any]) => {
+                          const coords = pageData.cordinates.split(',');
+                          const x = parseInt(coords[0]);
+                          const y = parseInt(coords[1]);
+                          
+                          const newPage: CanvasElementData = {
+                            id: `page-${Date.now()}-${pageKey}`,
+                            type: 'page',
+                            x,
+                            y,
+                            width: 180,
+                            height: 254,
+                            content: pageData.text,
+                            pageId: pageData.pageid,
+                            status: pageData.status || 'draft',
+                            label: pageData.label || ''
+                          };
+                          newElements.push(newPage);
+                        });
+                        
+                        // Create connections (skip duplicates and reciprocal links)
+                        Object.entries(network).forEach(([pageKey, pageData]: [string, any]) => {
+                          if (pageData.next && pageData.next.length > 0) {
+                            const fromElement = newElements.find(el => el.pageId === pageData.pageid);
+                            pageData.next.forEach((nextPageId: string) => {
+                              const toElement = newElements.find(el => el.pageId === nextPageId);
+                              if (fromElement && toElement) {
+                                const alreadyExists = newConnections.some(conn =>
+                                  (conn.fromId === fromElement.id && conn.toId === toElement.id) ||
+                                  (conn.fromId === toElement.id && conn.toId === fromElement.id)
+                                );
+                                if (!alreadyExists) {
+                                  newConnections.push({
+                                    id: `conn-${Date.now()}-${Math.random()}`,
+                                    fromId: fromElement.id,
+                                    toId: toElement.id
+                                  });
+                                }
+                              }
+                            });
+                          }
+                        });
+                        
+                        onImportNetwork(newElements, newConnections);
+                        setShowJsonModal(false);
+                        setJsonInput('');
+                        setIsImportMode(false);
+                      } catch (error) {
+                        alert('Invalid JSON format');
+                      }
+                    }} style={{
+                      background: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                    }}>
+                      Generate Pages
+                    </button>
+                    <button onClick={() => setIsImportMode(false)} style={{
+                      background: 'none',
+                      border: '1px solid #e5e7eb',
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                    }}>
+                      Back
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <pre style={{
+                    background: '#f8f9fa',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    fontSize: '14px',
+                    fontFamily: 'Monaco, Consolas, monospace',
+                    color: '#374151',
+                    overflow: 'auto',
+                    margin: 0,
+                    whiteSpace: 'pre-wrap',
+                  }}>
+                    {JSON.stringify(onGenerateNetwork(), null, 2)}
+                  </pre>
+                  
+                  <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
+                    <button onClick={() => {
+                      navigator.clipboard?.writeText(JSON.stringify(onGenerateNetwork(), null, 2));
+                    }} style={{
+                      background: '#2563eb',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                    }}>
+                      Copy to Clipboard
+                    </button>
+                    <button onClick={() => setShowJsonModal(false)} style={{
+                      background: 'none',
+                      border: '1px solid #e5e7eb',
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                    }}>
+                      Close
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const iconBtnStyle = {
+  width: 32,
+  height: 32,
+  border: 'none',
+  background: 'none',
+  borderRadius: 8,
+  fontSize: 18,
+  cursor: 'pointer',
+  color: '#333',
+  margin: 0,
+  padding: 0,
+  outline: 'none',
+  transition: 'background 0.2s',
+};
+
+const toolbarBtnStyleSmall = {
+  width: 32,
+  height: 32,
+  borderRadius: 8,
+  background: 'none',
+  color: '#222',
+  border: 'none',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: 18,
+  cursor: 'pointer',
+  outline: 'none',
+  transition: 'background 0.2s',
+  margin: 0,
+  padding: 0,
+};
+
+export default InfiniteCanvas;
+            {/* status label/dropdown */}
+            {element.type === 'page' && (
+              <div
+                data-status-dropdown
+                onMouseEnter={(e)=>{e.stopPropagation(); setTagMenuFor(element.id);}}
+                onMouseLeave={(e)=>{e.stopPropagation(); setTagMenuFor(null);}}
                 onMouseDown={(e)=>{e.stopPropagation();}}
-                onClick={(e)=>{e.stopPropagation(); setTagMenuFor(prev=> prev===element.id ? null : element.id);}}
                 style={{
                   position: 'absolute',
                   bottom: -14,
@@ -1089,7 +1580,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                 <span style={{textTransform:'capitalize'}}>{element.status || 'draft'}</span>
                 {tagMenuFor === element.id && (
                   <div
-                    onMouseDown={(e)=>{e.stopPropagation();}}
+                    data-status-dropdown
                     style={{
                       position: 'absolute',
                       top: '100%',
@@ -1101,12 +1592,32 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                       padding: 8,
                       zIndex: 200,
                       minWidth: 100,
+                      marginTop: 4,
                     }}
                   >
                     {statuses.map(s => (
-                      <div key={s} style={{padding:'4px 8px', cursor:'pointer'}}
+                      <div
+                        key={s}
+                        data-status-dropdown
+                        style={{
+                          padding:'8px 12px', 
+                          cursor:'pointer',
+                          color: '#000',
+                          borderRadius: 4,
+                          transition: 'background-color 0.2s',
+                        }}
+                        onMouseEnter={(e)=>{(e.currentTarget as HTMLElement).style.backgroundColor = '#f0f0f0';}}
+                        onMouseLeave={(e)=>{(e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';}}
                         onMouseDown={(e)=>{e.stopPropagation();}}
-                        onClick={(e)=>{e.stopPropagation(); updateStatus(element.id, s); setTagMenuFor(null);}}
+                        onClick={(e)=>{e.stopPropagation(); updateStatus(element.id, s);}}
+                      >
+                        {s.charAt(0).toUpperCase() + s.slice(1)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
                       >
                         {s.charAt(0).toUpperCase() + s.slice(1)}
                       </div>

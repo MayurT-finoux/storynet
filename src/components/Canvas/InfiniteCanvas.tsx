@@ -40,6 +40,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
   characters,
   onGenerateNetwork,
   onImportNetwork,
+  onUpdateStatus,
 }: InfiniteCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -1069,6 +1070,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
             {/* status label/dropdown */}
             {element.type === 'page' && (
               <div
+                onMouseDown={(e)=>{e.stopPropagation();}}
                 onClick={(e)=>{e.stopPropagation(); setTagMenuFor(prev=> prev===element.id ? null : element.id);}}
                 style={{
                   position: 'absolute',
@@ -1086,20 +1088,24 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
               >
                 <span style={{textTransform:'capitalize'}}>{element.status || 'draft'}</span>
                 {tagMenuFor === element.id && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    background: 'white',
-                    border: '1px solid #e5e7eb',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                    borderRadius: 8,
-                    padding: 8,
-                    zIndex: 200,
-                    minWidth: 100,
-                  }}>
+                  <div
+                    onMouseDown={(e)=>{e.stopPropagation();}}
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      background: 'white',
+                      border: '1px solid #e5e7eb',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      borderRadius: 8,
+                      padding: 8,
+                      zIndex: 200,
+                      minWidth: 100,
+                    }}
+                  >
                     {statuses.map(s => (
                       <div key={s} style={{padding:'4px 8px', cursor:'pointer'}}
+                        onMouseDown={(e)=>{e.stopPropagation();}}
                         onClick={(e)=>{e.stopPropagation(); updateStatus(element.id, s); setTagMenuFor(null);}}
                       >
                         {s.charAt(0).toUpperCase() + s.slice(1)}

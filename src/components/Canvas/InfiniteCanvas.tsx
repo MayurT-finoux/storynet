@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Type, FileText, ZoomIn, ZoomOut, Maximize2, Grid3x3, Trash2, Network, User, X, Upload, Copy, ChevronLeft } from 'lucide-react';
+import { Type, FileText, ZoomIn, ZoomOut, Maximize2, Grid3x3, Trash2, Network, User, X, Upload, Copy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CanvasElementData, ConnectionData } from '../../types/canvas';
 import { Character } from '../../types/character';
 import RichTextEditor from '../RichTextEditor';
@@ -926,6 +926,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
               padding: 0,
               overflow: 'visible',
               transition: 'box-shadow 0.2s',
+              zIndex: isDraggingElement && selectedElement === element.id ? 10 : 1,
               cursor: editingTextElement === element.id ? 'text' : (isDraggingElement && selectedElement === element.id ? 'grabbing' : 'grab'),
             }}
           >
@@ -1248,97 +1249,126 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
       </div>
 
       {/* Page Editor Modal */}
-      {editingElement && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 1000,
-          background: 'rgba(0, 0, 0, 0.3)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '40px',
-        }}
-        onClick={() => setEditingElement(null)}>
-          {/* Main Editor Page - Exactly like page card but larger */}
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-            display: 'flex',
-            flexDirection: 'column',
-            width: '100%',
-            maxWidth: '500px',
-            height: '600px',
-            border: '1.5px solid #ececf0',
-            overflow: 'hidden',
-            position: 'relative',
-          }}
-          onClick={(e) => e.stopPropagation()}>
-            {/* Content Area - Editable, matches page cards padding */}
-            <div
-              ref={editorRef}
-              id="page-content-editor"
-              contentEditable
-              suppressContentEditableWarning={true}
-              style={{
-                flex: 1,
-                padding: '16px',
-                overflow: 'auto',
-                outline: 'none',
-                fontSize: '16px',
-                lineHeight: '1.6',
-                color: '#111827',
-                background: '#ffffff',
-                fontFamily: 'inherit',
-              }}
-              onInput={(e) => {
-                const content = (e.currentTarget as HTMLDivElement).innerHTML;
-                setElements(prev => prev.map(el =>
-                  el.id === editingElement ? { ...el, content } : el
-                ));
-              }}
-              onMouseOver={(e) => {
-                const target = e.target as HTMLElement;
-                const charName = target.getAttribute?.('data-char');
-                if (charName) {
-                  const rect = target.getBoundingClientRect();
-                  setCharTooltip({ name: charName, x: rect.left, y: rect.top });
-                }
-              }}
-              onMouseOut={(e) => {
-                const target = e.target as HTMLElement;
-                if (target.getAttribute?.('data-char')) setCharTooltip(null);
-              }}
-            ></div>
-            
-            {/* Highlight Overlay */}
-            {editingElement && elements.find(el => el.id === editingElement) && (
+      {editingElement && (() => {
+        const nextPages = connections
+          .filter(c => c.fromId === editingElement)
+          .map(c => elements.find(el => el.id === c.toId))
+          .filter(Boolean) as CanvasElementData[];
+        const prevPages = connections
+          .filter(c => c.toId === editingElement)
+          .map(c => elements.find(el => el.id === c.fromId))
+          .filter(Boolean) as CanvasElementData[];
+
+        const NavCard = ({ page, side }: { page: CanvasElementData; side: 'left' | 'right' }) => (
+          <button
+            onClick={() => setEditingElement(page.id)}
+            style={{
+              display: 'flex', flexDirection: 'column',
+              alignItems: side === 'left' ? 'flex-end' : 'flex-start',
+              gap: '3px', padding: '10px 12px',
+              background: 'rgba(255,255,255,0.9)', border: '1.5px solid #ececf0',
+              borderRadius: '12px', cursor: 'pointer',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+              backdropFilter: 'blur(8px)', transition: 'all 0.15s',
+              maxWidth: '120px', width: '120px',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fff'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#d1d5db'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.9)'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#ececf0'; }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#9ca3af', fontSize: 11 }}>
+              {side === 'left' && <ChevronLeft size={11} />}
+              <span>{side === 'left' ? 'Previous' : 'Next'}</span>
+              {side === 'right' && <ChevronRight size={11} />}
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#111', lineHeight: 1.3, wordBreak: 'break-all' }}>
+              {page.label || page.pageId || 'Page'}
+            </div>
+          </button>
+        );
+
+        return (
+          <div
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1000,
+              background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px',
+            }}
+            onClick={() => setEditingElement(null)}
+          >
+            {/* Prev — left of page near bottom */}
+            {prevPages.length > 0 && (
               <div
-                dangerouslySetInnerHTML={{
-                  __html: highlightCharacters(elements.find(el => el.id === editingElement)?.content || '')
-                }}
                 style={{
                   position: 'absolute',
-                  top: 0, left: 0, right: 0, bottom: 0,
-                  padding: '16px',
-                  fontSize: '16px',
-                  lineHeight: '1.6',
-                  color: 'transparent',
-                  background: 'transparent',
-                  pointerEvents: 'none',
-                  overflow: 'auto',
-                  fontFamily: 'inherit',
-                  whiteSpace: 'pre-wrap',
-                  wordWrap: 'break-word',
+                  right: 'calc(50% + 260px)',
+                  bottom: '80px',
+                  display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px',
                 }}
+                onClick={e => e.stopPropagation()}
               >
+                {prevPages.map(p => <NavCard key={p.id} page={p} side="left" />)}
               </div>
             )}
+
+            {/* Next — right of page near bottom */}
+            {nextPages.length > 0 && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 'calc(50% + 260px)',
+                  bottom: '80px',
+                  display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px',
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                {nextPages.map(p => <NavCard key={p.id} page={p} side="right" />)}
+              </div>
+            )}
+
+            <div
+              style={{
+                background: 'white', borderRadius: '16px',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                display: 'flex', flexDirection: 'column',
+                width: '100%', maxWidth: '500px', height: '600px',
+                border: '1.5px solid #ececf0', overflow: 'hidden', position: 'relative',
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              {(() => { const pg = elements.find(el => el.id === editingElement); return pg?.pageId ? (
+                <div style={{ position: 'absolute', top: 10, right: 12, fontSize: 11, color: '#d1d5db', fontWeight: 500, pointerEvents: 'none', zIndex: 2 }}>{pg.pageId}</div>
+              ) : null; })()}
+              <div
+                ref={editorRef}
+                contentEditable
+                suppressContentEditableWarning
+                style={{ flex: 1, padding: '16px', overflow: 'auto', outline: 'none', fontSize: '16px', lineHeight: '1.6', color: '#111827', background: '#ffffff', fontFamily: 'inherit' }}
+                onInput={e => {
+                  const content = (e.currentTarget as HTMLDivElement).innerHTML;
+                  setElements(prev => prev.map(el => el.id === editingElement ? { ...el, content } : el));
+                }}
+                onMouseOver={e => {
+                  const target = e.target as HTMLElement;
+                  const charName = target.getAttribute?.('data-char');
+                  if (charName) { const rect = target.getBoundingClientRect(); setCharTooltip({ name: charName, x: rect.left, y: rect.top }); }
+                }}
+                onMouseOut={e => { if ((e.target as HTMLElement).getAttribute?.('data-char')) setCharTooltip(null); }}
+              />
+              {elements.find(el => el.id === editingElement) && (
+                <div
+                  dangerouslySetInnerHTML={{ __html: highlightCharacters(elements.find(el => el.id === editingElement)?.content || '') }}
+                  style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                    padding: '16px', fontSize: '16px', lineHeight: '1.6',
+                    color: 'transparent', background: 'transparent', pointerEvents: 'none',
+                    overflow: 'auto', fontFamily: 'inherit', whiteSpace: 'pre-wrap', wordWrap: 'break-word',
+                  }}
+                />
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Character tooltip */}
       {charTooltip && (() => {

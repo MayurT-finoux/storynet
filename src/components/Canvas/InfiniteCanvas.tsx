@@ -75,32 +75,29 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
   const [isImportMode, setIsImportMode] = useState(false);
   const [tagMenuFor, setTagMenuFor] = useState<string | null>(null);
   const [draggedItemType, setDraggedItemType] = useState<'page' | 'text' | null>(null);
+  const [editingTextElement, setEditingTextElement] = useState<string | null>(null);
+  const [resizingElement, setResizingElement] = useState<string | null>(null);
+  const resizeStart = useRef<{ mouseX: number; mouseY: number; w: number; h: number } | null>(null);
   const [draggedItemPosition, setDraggedItemPosition] = useState({ x: 0, y: 0 });
 
   const pageCount = elements.filter(el => el.type === 'page').length;
+  const [charTooltip, setCharTooltip] = useState<{ name: string; x: number; y: number } | null>(null);
 
   const highlightCharacters = (text: string) => {
     if (!characters.length || !text) return text;
-    
     const allNames: string[] = [];
     characters.forEach(char => {
       allNames.push(char.name);
-      if (char.aliases) {
-        allNames.push(...char.aliases);
-      }
+      if (char.aliases) allNames.push(...char.aliases);
     });
-    
     const sortedNames = allNames.sort((a, b) => b.length - a.length);
-    
     let highlightedText = text;
-    
     sortedNames.forEach(name => {
       const regex = new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
-      highlightedText = highlightedText.replace(regex, 
-        `<span style="color: #d32f2f; font-weight: bold; background-color: #ffebee;">${name}</span>`
+      highlightedText = highlightedText.replace(regex,
+        `<span data-char="${name}" style="color:#d32f2f;font-weight:bold;background-color:#ffebee;cursor:pointer;border-radius:3px;padding:0 2px">${name}</span>`
       );
     });
-    
     return highlightedText;
   };
 
@@ -227,10 +224,17 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
       const element = elements.find(el => el.id === editingElement);
       if (element && editorRef.current.innerHTML !== element.content) {
         editorRef.current.innerHTML = element.content || '';
-        editorRef.current.focus();
       }
+      // place cursor at end
+      editorRef.current.focus();
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(editorRef.current);
+      range.collapse(false);
+      sel?.removeAllRanges();
+      sel?.addRange(range);
     }
-  }, [editingElement, elements]);
+  }, [editingElement]);
 
   const handleWheel = (e: React.WheelEvent) => {
     if (editingElement || isConnecting) return;
@@ -297,7 +301,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
 
   // Handle mouse move for both panning and element dragging
   useEffect(() => {
-    if (!isPanning && !isDraggingElement && !isConnecting) return;
+    if (!isPanning && !isDraggingElement && !isConnecting && !resizingElement) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       if (isPanning) {
@@ -305,6 +309,15 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
           x: e.clientX - panStart.x,
           y: e.clientY - panStart.y,
         });
+      } else if (resizingElement && resizeStart.current) {
+        const rs = resizeStart.current;
+        const dx = (e.clientX - rs.mouseX) / scale;
+        const dy = (e.clientY - rs.mouseY) / scale;
+        setElements(prev => prev.map(el =>
+          el.id === resizingElement
+            ? { ...el, width: Math.max(80, rs.w + dx), height: Math.max(24, rs.h + dy) }
+            : el
+        ));
       } else if (isDraggingElement && selectedElement) {
         // Update element position
         setElements((prev: CanvasElementData[]) => prev.map(el => {
@@ -340,7 +353,10 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
       setIsPanning(false);
       setIsDraggingElement(false);
       setSelectedElement(null);
-      
+      if (resizingElement) {
+        setResizingElement(null);
+        resizeStart.current = null;
+      }
       if (isConnecting) {
         setIsConnecting(false);
         setConnectingFrom(null);
@@ -355,7 +371,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isPanning, isDraggingElement, selectedElement, panStart, dragStart, offset, isConnecting, connectingFrom]);
+  }, [isPanning, isDraggingElement, selectedElement, panStart, dragStart, offset, isConnecting, connectingFrom, resizingElement, scale]);
 
   const handleZoomIn = () => {
     const newScale = Math.min(MAX_SCALE, scale + 0.1);
@@ -696,45 +712,27 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
           }}
           onClick={(e) => {
             e.stopPropagation();
-
             const id = `text-${Date.now()}`;
             const textWidth = 200;
-            const textHeight = 40;
-
-            // visible top-left in canvas coords
             const visibleX = -offset.x / scale;
             const visibleY = -offset.y / scale;
             const visibleW = window.innerWidth / scale;
             const visibleH = window.innerHeight / scale;
-
-            // Desired placement: halfway between top and center of visible area
-            const baseX = visibleX + visibleW / 2 - textWidth / 2;
-            const baseY = visibleY + visibleH * 0.25 - textHeight / 2; // quarter down the viewport
-
-            // If a text already exists at this approximate location, place next to it (to the right)
-            const tolerance = 24; // px tolerance in canvas coords
-            const textsAtLocation = elements.filter(el => el.type === 'text' && Math.abs(el.y - baseY) <= tolerance);
-
-            let x = baseX;
-            let y = baseY;
-
-            if (textsAtLocation.length > 0) {
-              // find the right-most text in this row and place next to it
-              const rightMost = textsAtLocation.reduce((prev, cur) => (cur.x > prev.x ? cur : prev), textsAtLocation[0]);
-              x = rightMost.x + rightMost.width + 30;
-              y = rightMost.y;
-            }
-
+            const centerX = visibleX + visibleW / 2 - textWidth / 2;
+            const centerY = visibleY + visibleH * 0.25 - 20;
+            // stack diagonally if something already near center
+            const overlap = elements.filter(el =>
+              el.type === 'text' &&
+              Math.abs(el.x - centerX) < 30 &&
+              Math.abs(el.y - centerY) < 30
+            );
+            const offset24 = overlap.length * 24;
             const newText: CanvasElementData = {
-              id,
-              type: 'text',
-              x,
-              y,
-              width: textWidth,
-              height: textHeight,
-              content: '',
+              id, type: 'text',
+              x: centerX + offset24,
+              y: centerY + offset24,
+              width: textWidth, height: 40, content: '',
             };
-
             setElements(prev => [...prev, newText]);
           }}
         >
@@ -874,16 +872,25 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
             onMouseEnter={() => setHoveredElement(element.id)}
             onMouseLeave={() => setHoveredElement(null)}
             onMouseDown={(e) => {
-              if (e.detail === 2) return; // Ignore mousedown on double-click
-              // clicking inside the status dropdown shouldn't start a drag
+              if (e.detail === 2) return;
               if ((e.target as HTMLElement).closest('[data-status-dropdown]')) return;
+              if ((e.target as HTMLElement).closest('[data-resize-handle]')) return;
+              if (element.type === 'text' && editingTextElement === element.id) return;
+              if (element.type === 'text') {
+                e.stopPropagation();
+                setSelectedElement(element.id);
+                return;
+              }
               handleElementMouseDown(e, element.id);
             }}
             onDoubleClick={(e) => {
-              // Open editor on double-click for pages
               if (element.type === 'page') {
                 e.stopPropagation();
                 setEditingElement(element.id);
+              }
+              if (element.type === 'text') {
+                e.stopPropagation();
+                setEditingTextElement(element.id);
               }
             }}
             onMouseUp={(e) => {
@@ -900,19 +907,26 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
               left: element.x,
               top: element.y,
               width: element.width,
-              height: element.height,
+              height: element.type === 'text' ? 'auto' : element.height,
+              minHeight: element.type === 'text' ? 32 : undefined,
               background: element.type === 'page' ? '#fff' : 'transparent',
-              borderRadius: element.type === 'page' ? 16 : 0,
-              boxShadow: selectedElement === element.id 
-                ? (element.type === 'page' ? '0 0 0 2px #2563eb, 0 4px 16px rgba(0,0,0,0.08)' : '0 0 0 2px #2563eb')
+              borderRadius: element.type === 'text' ? 6 : 16,
+              boxShadow: selectedElement === element.id
+                ? (element.type === 'page' ? '0 0 0 2px #2563eb, 0 4px 16px rgba(0,0,0,0.08)' : 'none')
                 : (element.type === 'page' ? '0 4px 16px rgba(0,0,0,0.08)' : 'none'),
-              border: element.type === 'page' ? '1.5px solid #ececf0' : 'none',
+              border: element.type === 'page'
+                ? '1.5px solid #ececf0'
+                : (editingTextElement === element.id
+                    ? '1.5px solid #111'
+                    : (hoveredElement === element.id || selectedElement === element.id
+                        ? '1.5px dashed #aaa'
+                        : '1.5px dashed transparent')),
               display: 'flex',
               flexDirection: 'column',
               padding: 0,
               overflow: 'visible',
               transition: 'box-shadow 0.2s',
-              cursor: isDraggingElement && selectedElement === element.id ? 'grabbing' : 'grab',
+              cursor: editingTextElement === element.id ? 'text' : (isDraggingElement && selectedElement === element.id ? 'grabbing' : 'grab'),
             }}
           >
             {/* Placeholder for toolbar and label - removed for now */}
@@ -1045,14 +1059,15 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
             <div
               style={{
                 flex: 1,
-                padding: element.type === 'page' ? '18px 16px 12px 16px' : '4px',
-                color: element.content ? '#000' : '#a3a3b2',
-                fontSize: element.type === 'page' ? 17 : 16,
-                userSelect: 'none',
-                overflow: 'hidden',
-                background: element.type === 'text' && selectedElement === element.id ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-                borderRadius: element.type === 'text' ? 4 : 0,
+                padding: element.type === 'page' ? '18px 16px 12px 16px' : '6px 8px',
+                color: '#111',
+                fontSize: 15,
+                userSelect: editingTextElement === element.id ? 'text' : 'none',
+                overflow: 'visible',
+                background: 'transparent',
                 position: 'relative',
+                cursor: editingTextElement === element.id ? 'text' : 'inherit',
+                lineHeight: '1.5',
               }}>
               {element.type === 'page' && element.pageId && (
                 <div style={{
@@ -1068,11 +1083,61 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                   {element.pageId}
                 </div>
               )}
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: element.content || (element.type === 'page' ? 'Double-click to edit...' : 'Click to edit text...')
-                }}
-              />
+              {element.type === 'text' && editingTextElement === element.id ? (
+                <div
+                  contentEditable
+                  suppressContentEditableWarning
+                  autoFocus
+                  style={{
+                    outline: 'none',
+                    cursor: 'text',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    color: '#111',
+                    minHeight: '1.5em',
+                    width: '100%',
+                    fontFamily: 'inherit',
+                    fontSize: 15,
+                    lineHeight: '1.5',
+                  }}
+                  onBlur={(e) => {
+                    const content = e.currentTarget.innerHTML;
+                    setElements(prev => prev.map(el => el.id === element.id ? { ...el, content } : el));
+                    setEditingTextElement(null);
+                  }}
+                  dangerouslySetInnerHTML={{ __html: element.content || '' }}
+                />
+              ) : (
+                <div
+                  style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: element.content ? '#111' : '#aaa' }}
+                  dangerouslySetInnerHTML={{
+                    __html: element.content || (element.type === 'page' ? 'Double-click to edit...' : 'Double-click to edit...')
+                  }}
+                />
+              )}
+              {/* Resize handle for text elements */}
+              {element.type === 'text' && (hoveredElement === element.id || selectedElement === element.id || editingTextElement === element.id) && (
+                <div
+                  data-resize-handle
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    resizeStart.current = { mouseX: e.clientX, mouseY: e.clientY, w: element.width, h: element.height };
+                    setResizingElement(element.id);
+                  }}
+                  style={{
+                    position: 'absolute',
+                    bottom: -4,
+                    right: -4,
+                    width: 12,
+                    height: 12,
+                    borderRadius: 3,
+                    background: '#111',
+                    cursor: 'nwse-resize',
+                    zIndex: 10,
+                  }}
+                />
+              )}
             </div>
             {/* status label/dropdown */}
             {element.type === 'page' && (
@@ -1229,15 +1294,26 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                 fontFamily: 'inherit',
               }}
               onInput={(e) => {
-                // Simple auto-save - don't manipulate HTML
                 const content = (e.currentTarget as HTMLDivElement).innerHTML;
                 setElements(prev => prev.map(el =>
                   el.id === editingElement ? { ...el, content } : el
                 ));
               }}
+              onMouseOver={(e) => {
+                const target = e.target as HTMLElement;
+                const charName = target.getAttribute?.('data-char');
+                if (charName) {
+                  const rect = target.getBoundingClientRect();
+                  setCharTooltip({ name: charName, x: rect.left, y: rect.top });
+                }
+              }}
+              onMouseOut={(e) => {
+                const target = e.target as HTMLElement;
+                if (target.getAttribute?.('data-char')) setCharTooltip(null);
+              }}
             ></div>
             
-            {/* Highlight Overlay - Shows character names in red without breaking cursor */}
+            {/* Highlight Overlay */}
             {editingElement && elements.find(el => el.id === editingElement) && (
               <div
                 dangerouslySetInnerHTML={{
@@ -1245,10 +1321,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                 }}
                 style={{
                   position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
+                  top: 0, left: 0, right: 0, bottom: 0,
                   padding: '16px',
                   fontSize: '16px',
                   lineHeight: '1.6',
@@ -1260,11 +1333,53 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                   whiteSpace: 'pre-wrap',
                   wordWrap: 'break-word',
                 }}
-              ></div>
+              >
+              </div>
             )}
           </div>
         </div>
       )}
+
+      {/* Character tooltip */}
+      {charTooltip && (() => {
+        const char = characters.find(c =>
+          c.name.toLowerCase() === charTooltip.name.toLowerCase() ||
+          c.aliases?.some(a => a.toLowerCase() === charTooltip.name.toLowerCase())
+        );
+        if (!char) return null;
+        return (
+          <div style={{
+            position: 'fixed',
+            left: charTooltip.x,
+            top: charTooltip.y - 8,
+            transform: 'translateY(-100%)',
+            zIndex: 2000,
+            background: '#fff',
+            border: '1.5px solid #ececf0',
+            borderRadius: '12px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+            padding: '10px 12px',
+            minWidth: '160px',
+            maxWidth: '220px',
+            pointerEvents: 'none',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: char.description ? '8px' : 0 }}>
+              {char.image
+                ? <img src={char.image} style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'cover', border: '1px solid #ececf0' }} />
+                : <div style={{ width: 28, height: 28, borderRadius: 6, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <User size={14} color="#9ca3af" />
+                  </div>
+              }
+              <span style={{ fontSize: '13px', fontWeight: '600', color: '#111' }}>{char.name}</span>
+            </div>
+            {char.description && (
+              <div style={{ fontSize: '12px', color: '#6b7280', lineHeight: '1.5' }}>
+                {char.description.length > 80 ? char.description.slice(0, 80) + '…' : char.description}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Instructions */}
       <div style={{

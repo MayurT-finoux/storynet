@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Edit2, Trash2, Upload, ChevronLeft, User } from 'lucide-react';
+import { X, Plus, Edit2, Trash2, Upload, ChevronLeft, User, UserPlus } from 'lucide-react';
 import { Character } from '../types/character';
 
 interface CharacterModalProps {
@@ -127,10 +127,9 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
       <div style={{
         position: 'fixed',
         right: '24px',
-        top: '50%',
-        transform: 'translateY(-50%)',
+        top: '24px',
         width: '360px',
-        maxHeight: '88vh',
+        maxHeight: 'calc(100vh - 48px)',
         background: '#fff',
         zIndex: 1000,
         borderRadius: '20px',
@@ -356,24 +355,24 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                   style={{
                     flex: 1, padding: '10px', border: '1.5px solid #ececf0', borderRadius: '10px',
                     background: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#374151',
-                    transition: 'all 0.15s',
+                    transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                   }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
                   onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
                 >
-                  Cancel
+                  <X size={14} /> Cancel
                 </button>
                 <button
                   type="submit"
                   style={{
                     flex: 1, padding: '10px', border: 'none', borderRadius: '10px',
                     background: '#000', color: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: '500',
-                    transition: 'all 0.15s',
+                    transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                   }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#222')}
                   onMouseLeave={e => (e.currentTarget.style.background = '#000')}
                 >
-                  {editingId ? 'Save Changes' : 'Add Character'}
+                  <UserPlus size={14} /> {editingId ? 'Save Changes' : 'Add Character'}
                 </button>
               </div>
             </form>
@@ -430,8 +429,8 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
 
       <style>{`
         @keyframes slideIn {
-          from { opacity: 0; transform: translateY(-50%) translateX(20px); }
-          to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+          from { opacity: 0; transform: translateX(20px); }
+          to   { opacity: 1; transform: translateX(0); }
         }
       `}</style>
     </>

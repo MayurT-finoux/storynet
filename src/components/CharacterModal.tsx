@@ -127,9 +127,9 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
       <div style={{
         position: 'fixed',
         right: '24px',
-        top: '24px',
+        top: '10vh',
         width: '360px',
-        maxHeight: 'calc(100vh - 48px)',
+        maxHeight: '80vh',
         background: '#fff',
         zIndex: 1000,
         borderRadius: '20px',
@@ -155,7 +155,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
               onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
               onMouseLeave={e => (e.currentTarget.style.background = 'none')}
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={16} color="#6b7280" />
             </button>
           )}
           <span style={{ flex: 1, fontSize: '15px', fontWeight: '600', color: '#111' }}>
@@ -170,7 +170,9 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
               onMouseLeave={e => (e.currentTarget.style.background = '#000')}
               title="Add Character"
             >
-              <Plus size={16} />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
             </button>
           )}
           <button
@@ -179,7 +181,9 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
             onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
             onMouseLeave={e => (e.currentTarget.style.background = 'none')}
           >
-            <X size={16} />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
           </button>
         </div>
 
@@ -243,7 +247,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                         onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                         title="Edit"
                       >
-                        <Edit2 size={14} />
+                        <Edit2 size={14} color="#6b7280" />
                       </button>
                       <button
                         style={{ ...iconBtn, borderColor: '#fecaca', color: '#ef4444' }}
@@ -252,7 +256,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                         onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                         title="Delete"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={14} color="#ef4444" />
                       </button>
                     </div>
                   </div>
@@ -324,7 +328,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}
                     >
-                      <X size={14} />
+                      <X size={14} color="#fff" />
                     </button>
                   </div>
                 ) : (
@@ -343,7 +347,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                       (e.currentTarget as HTMLLabelElement).style.color = '#9ca3af';
                     }}
                   >
-                    <Upload size={15} /> Upload image
+                    <Upload size={15} color="#9ca3af" /> Upload image
                   </label>
                 )}
               </div>
@@ -360,7 +364,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                   onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
                   onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
                 >
-                  <X size={14} /> Cancel
+                  <X size={14} color="#374151" /> Cancel
                 </button>
                 <button
                   type="submit"
@@ -372,7 +376,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                   onMouseEnter={e => (e.currentTarget.style.background = '#222')}
                   onMouseLeave={e => (e.currentTarget.style.background = '#000')}
                 >
-                  <UserPlus size={14} /> {editingId ? 'Save Changes' : 'Add Character'}
+                  <UserPlus size={14} color="#fff" /> {editingId ? 'Save Changes' : 'Add Character'}
                 </button>
               </div>
             </form>
@@ -420,7 +424,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                 onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
                 onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
               >
-                <Edit2 size={14} /> Edit Character
+                <Edit2 size={14} color="#111" /> Edit Character
               </button>
             </div>
           )}

@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Type, FileText, ZoomIn, ZoomOut, Maximize2, Grid3x3, Trash2, Network, User, Code } from 'lucide-react';
+import { Type, FileText, ZoomIn, ZoomOut, Maximize2, Grid3x3, Trash2, Network, User, X, Upload, Copy, ChevronLeft } from 'lucide-react';
 import { CanvasElementData, ConnectionData } from '../../types/canvas';
 import { Character } from '../../types/character';
 import RichTextEditor from '../RichTextEditor';
@@ -1459,227 +1459,159 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
 
       {/* JSON Modal */}
       {showJsonModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 1000,
-          background: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px',
-        }} onClick={() => setShowJsonModal(false)}>
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-            width: '100%',
-            maxWidth: '600px',
-            maxHeight: '80vh',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-          }} onClick={(e) => e.stopPropagation()}>
-            
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
+          }}
+          onClick={() => { setShowJsonModal(false); setIsImportMode(false); }}
+        >
+          <div
+            style={{
+              background: '#fff', borderRadius: '20px',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 0 0 1.5px #ececf0',
+              width: '100%', maxWidth: '560px', maxHeight: '82vh',
+              overflow: 'hidden', display: 'flex', flexDirection: 'column',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
             <div style={{
-              padding: '20px',
-              borderBottom: '1px solid #e5e7eb',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
+              padding: '16px', borderBottom: '1.5px solid #f3f4f6',
+              display: 'flex', alignItems: 'center', gap: '10px',
             }}>
-              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>
-                {isImportMode ? 'Import JSON' : 'Page Network JSON'}
-              </h2>
-              {!isImportMode && (
-                <button onClick={() => setIsImportMode(true)} style={{
-                  background: '#10b981',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: '500',
-                }}>
-                  Import JSON
+              {isImportMode && (
+                <button
+                  onClick={() => setIsImportMode(false)}
+                  style={{ background: 'none', border: '1.5px solid #ececf0', borderRadius: '8px', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#6b7280', flexShrink: 0 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                >
+                  <ChevronLeft size={16} />
                 </button>
               )}
-              <button onClick={() => setShowJsonModal(false)} style={{
-                background: 'none',
-                border: 'none',
-                padding: '8px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+              <span style={{ flex: 1, fontSize: '15px', fontWeight: '600', color: '#111' }}>
+                {isImportMode ? 'Import Network' : 'Page Network'}
+              </span>
+              {!isImportMode && (
+                <button
+                  onClick={() => setIsImportMode(true)}
+                  style={{ background: 'none', border: '1.5px solid #ececf0', borderRadius: '8px', padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', color: '#374151' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                >
+                  <Upload size={13} /> Import
+                </button>
+              )}
+              <button
+                onClick={() => { setShowJsonModal(false); setIsImportMode(false); }}
+                style={{ background: 'none', border: '1.5px solid #ececf0', borderRadius: '8px', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#6b7280', flexShrink: 0 }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              >
+                <X size={16} />
               </button>
             </div>
 
-            <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
+            {/* Body */}
+            <div style={{ flex: 1, overflow: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {isImportMode ? (
                 <>
                   <textarea
                     value={jsonInput}
-                    onChange={(e) => setJsonInput(e.target.value)}
-                    placeholder="Paste your JSON here..."
+                    onChange={e => setJsonInput(e.target.value)}
+                    placeholder="Paste your network JSON here..."
                     autoFocus
                     style={{
-                      width: '100%',
-                      height: '300px',
-                      padding: '16px',
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontFamily: 'Monaco, Consolas, monospace',
-                      resize: 'vertical',
-                      outline: 'none',
-                      color: '#000',
-                      background: '#ffffff',
-                      boxSizing: 'border-box',
-                      lineHeight: '1.5',
+                      width: '100%', height: '280px', padding: '14px',
+                      border: '1.5px solid #ececf0', borderRadius: '12px',
+                      fontSize: '13px', fontFamily: 'Monaco, Consolas, monospace',
+                      resize: 'none', outline: 'none', color: '#111',
+                      background: '#fafafa', boxSizing: 'border-box', lineHeight: '1.6',
                     }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#2563eb';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
-                    }}
+                    onFocus={e => (e.currentTarget.style.borderColor = '#111')}
+                    onBlur={e => (e.currentTarget.style.borderColor = '#ececf0')}
                   />
-                  <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
-                    <button onClick={() => {
-                      try {
-                        const trimmedInput = jsonInput.trim();
-                        if (!trimmedInput) {
-                          alert('Please paste JSON code first');
-                          return;
-                        }
-                        const network = JSON.parse(trimmedInput);
-                        const newElements: CanvasElementData[] = [];
-                        const newConnections: ConnectionData[] = [];
-                        
-                        Object.entries(network).forEach(([pageKey, pageData]: [string, any]) => {
-                          const coords = pageData.cordinates.split(',');
-                          const x = parseInt(coords[0]);
-                          const y = parseInt(coords[1]);
-                          
-                          const newPage: CanvasElementData = {
-                            id: `page-${Date.now()}-${pageKey}`,
-                            type: 'page',
-                            x,
-                            y,
-                            width: 180,
-                            height: 254,
-                            content: pageData.text,
-                            pageId: pageData.pageid,
-                            status: pageData.status || 'draft',
-                            label: pageData.label || ''
-                          };
-                          newElements.push(newPage);
-                        });
-                        
-                        // Create connections (skip duplicates and reciprocal links)
-                        Object.entries(network).forEach(([pageKey, pageData]: [string, any]) => {
-                          if (pageData.next && pageData.next.length > 0) {
-                            const fromElement = newElements.find(el => el.pageId === pageData.pageid);
-                            pageData.next.forEach((nextPageId: string) => {
-                              const toElement = newElements.find(el => el.pageId === nextPageId);
-                              if (fromElement && toElement) {
-                                const alreadyExists = newConnections.some(conn =>
-                                  (conn.fromId === fromElement.id && conn.toId === toElement.id) ||
-                                  (conn.fromId === toElement.id && conn.toId === fromElement.id)
-                                );
-                                if (!alreadyExists) {
-                                  newConnections.push({
-                                    id: `conn-${Date.now()}-${Math.random()}`,
-                                    fromId: fromElement.id,
-                                    toId: toElement.id
-                                  });
-                                }
-                              }
-                            });
-                          }
-                        });
-                        
-                        onImportNetwork(newElements, newConnections);
-                        setShowJsonModal(false);
-                        setJsonInput('');
-                        setIsImportMode(false);
-                      } catch (error) {
-                        alert('Invalid JSON format');
-                      }
-                    }} style={{
-                      background: '#10b981',
-                      color: 'white',
-                      border: 'none',
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                    }}>
-                      Generate Pages
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => setIsImportMode(false)}
+                      style={{ flex: 1, padding: '10px', border: '1.5px solid #ececf0', borderRadius: '10px', background: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
+                      onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+                    >
+                      <X size={14} /> Cancel
                     </button>
-                    <button onClick={() => setIsImportMode(false)} style={{
-                      background: 'none',
-                      border: '1px solid #e5e7eb',
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                    }}>
-                      Back
+                    <button
+                      onClick={() => {
+                        try {
+                          const trimmedInput = jsonInput.trim();
+                          if (!trimmedInput) { alert('Please paste JSON first'); return; }
+                          const network = JSON.parse(trimmedInput);
+                          const newElements: CanvasElementData[] = [];
+                          const newConnections: ConnectionData[] = [];
+                          Object.entries(network).forEach(([pageKey, pageData]: [string, any]) => {
+                            const coords = pageData.cordinates.split(',');
+                            newElements.push({
+                              id: `page-${Date.now()}-${pageKey}`,
+                              type: 'page', x: parseInt(coords[0]), y: parseInt(coords[1]),
+                              width: 180, height: 254, content: pageData.text,
+                              pageId: pageData.pageid, status: pageData.status || 'draft', label: pageData.label || ''
+                            });
+                          });
+                          Object.entries(network).forEach(([_, pageData]: [string, any]) => {
+                            if (pageData.next?.length > 0) {
+                              const fromEl = newElements.find(el => el.pageId === pageData.pageid);
+                              pageData.next.forEach((nextId: string) => {
+                                const toEl = newElements.find(el => el.pageId === nextId);
+                                if (fromEl && toEl && !newConnections.some(c =>
+                                  (c.fromId === fromEl.id && c.toId === toEl.id) ||
+                                  (c.fromId === toEl.id && c.toId === fromEl.id)
+                                )) {
+                                  newConnections.push({ id: `conn-${Date.now()}-${Math.random()}`, fromId: fromEl.id, toId: toEl.id });
+                                }
+                              });
+                            }
+                          });
+                          onImportNetwork(newElements, newConnections);
+                          setShowJsonModal(false); setJsonInput(''); setIsImportMode(false);
+                        } catch { alert('Invalid JSON format'); }
+                      }}
+                      style={{ flex: 1, padding: '10px', border: 'none', borderRadius: '10px', background: '#000', color: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#222')}
+                      onMouseLeave={e => (e.currentTarget.style.background = '#000')}
+                    >
+                      <FileText size={14} /> Generate Pages
                     </button>
                   </div>
                 </>
               ) : (
                 <>
                   <pre style={{
-                    background: '#f8f9fa',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    padding: '16px',
-                    fontSize: '14px',
-                    fontFamily: 'Monaco, Consolas, monospace',
-                    color: '#374151',
-                    overflow: 'auto',
-                    margin: 0,
-                    whiteSpace: 'pre-wrap',
+                    background: '#fafafa', border: '1.5px solid #ececf0',
+                    borderRadius: '12px', padding: '14px',
+                    fontSize: '13px', fontFamily: 'Monaco, Consolas, monospace',
+                    color: '#374151', overflow: 'auto', margin: 0,
+                    whiteSpace: 'pre-wrap', lineHeight: '1.6', flex: 1,
                   }}>
                     {JSON.stringify(onGenerateNetwork(), null, 2)}
                   </pre>
-                  
-                  <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
-                    <button onClick={() => {
-                      navigator.clipboard?.writeText(JSON.stringify(onGenerateNetwork(), null, 2));
-                    }} style={{
-                      background: '#2563eb',
-                      color: 'white',
-                      border: 'none',
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                    }}>
-                      Copy to Clipboard
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => { setShowJsonModal(false); setIsImportMode(false); }}
+                      style={{ flex: 1, padding: '10px', border: '1.5px solid #ececf0', borderRadius: '10px', background: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
+                      onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+                    >
+                      <X size={14} /> Close
                     </button>
-                    <button onClick={() => setShowJsonModal(false)} style={{
-                      background: 'none',
-                      border: '1px solid #e5e7eb',
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                    }}>
-                      Close
+                    <button
+                      onClick={() => navigator.clipboard?.writeText(JSON.stringify(onGenerateNetwork(), null, 2))}
+                      style={{ flex: 1, padding: '10px', border: 'none', borderRadius: '10px', background: '#000', color: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#222')}
+                      onMouseLeave={e => (e.currentTarget.style.background = '#000')}
+                    >
+                      <Copy size={14} /> Copy JSON
                     </button>
                   </div>
                 </>

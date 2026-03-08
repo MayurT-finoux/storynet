@@ -923,6 +923,9 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         <div style={{ position: 'absolute', top: 10, left: 10, color: 'black', background: 'white', padding: 5 }}>
           Elements: {elements.length}
         </div>
+        <div style={{ position: 'absolute', top: 10, left: 60, color: '#fff', background: isMobile ? '#000' : '#2563eb', padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, pointerEvents: 'none', zIndex: 20 }}>
+          {isMobile ? 'mobile' : 'desktop'}
+        </div>
         
         {elements.map((element: CanvasElementData) => (
           <div

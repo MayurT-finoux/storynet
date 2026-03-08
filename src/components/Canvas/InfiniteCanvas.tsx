@@ -44,6 +44,13 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
 }: InfiniteCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod|Touch/i.test(navigator.userAgent) || window.matchMedia('(pointer: coarse)').matches;
+  const lastTouchDist = useRef<number | null>(null);
+  const lastTouchMid = useRef<{ x: number; y: number } | null>(null);
+  const touchDragId = useRef<string | null>(null);
+  const touchDragStart = useRef<{ x: number; y: number } | null>(null);
+  const touchTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchTapCount = useRef(0);
 
   // status dropdown constants
   const statuses: Array<'draft'|'idea'|'done'> = ['draft','idea','done'];
@@ -616,6 +623,59 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
       ref={containerRef}
       onWheel={handleWheel}
       onMouseDown={handleCanvasMouseDown}
+      onTouchStart={(e) => {
+        if (editingElement) return;
+        const touches = e.touches;
+        if (touches.length === 2) {
+          // pinch-zoom start
+          const dx = touches[1].clientX - touches[0].clientX;
+          const dy = touches[1].clientY - touches[0].clientY;
+          lastTouchDist.current = Math.hypot(dx, dy);
+          lastTouchMid.current = {
+            x: (touches[0].clientX + touches[1].clientX) / 2,
+            y: (touches[0].clientY + touches[1].clientY) / 2,
+          };
+        } else if (touches.length === 1) {
+          const t = touches[0];
+          const target = t.target as HTMLElement;
+          if (!target.closest('.page-element')) {
+            // canvas pan
+            setPanStart({ x: t.clientX - offset.x, y: t.clientY - offset.y });
+            setIsPanning(true);
+          }
+        }
+      }}
+      onTouchMove={(e) => {
+        if (editingElement) return;
+        e.preventDefault();
+        const touches = e.touches;
+        if (touches.length === 2 && lastTouchDist.current !== null && lastTouchMid.current !== null) {
+          const dx = touches[1].clientX - touches[0].clientX;
+          const dy = touches[1].clientY - touches[0].clientY;
+          const dist = Math.hypot(dx, dy);
+          const mid = {
+            x: (touches[0].clientX + touches[1].clientX) / 2,
+            y: (touches[0].clientY + touches[1].clientY) / 2,
+          };
+          const scaleRatio = dist / lastTouchDist.current;
+          const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * scaleRatio));
+          setOffset(prev => ({
+            x: mid.x - (mid.x - prev.x) * (newScale / scale),
+            y: mid.y - (mid.y - prev.y) * (newScale / scale),
+          }));
+          setScale(newScale);
+          lastTouchDist.current = dist;
+          lastTouchMid.current = mid;
+        } else if (touches.length === 1 && isPanning) {
+          const t = touches[0];
+          setOffset({ x: t.clientX - panStart.x, y: t.clientY - panStart.y });
+        }
+      }}
+      onTouchEnd={() => {
+        lastTouchDist.current = null;
+        lastTouchMid.current = null;
+        setIsPanning(false);
+      }}
       onDragOver={(e) => {
         if (draggedItemType) {
           e.preventDefault();
@@ -679,13 +739,14 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         position: 'relative',
         background: '#f5f5f7',
         cursor: draggedItemType ? 'copy' : (isPanning ? 'grabbing' : 'default'),
+        touchAction: 'none',
       }}
     >
       {/* Left vertical toolbar */}
       <div style={{
         position: 'fixed',
         top: '50%',
-        left: 20,
+        left: isMobile ? 12 : 20,
         transform: 'translateY(-50%)',
         zIndex: 51,
         background: '#fff',
@@ -697,10 +758,10 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         flexDirection: 'column',
         alignItems: 'center',
         gap: 6,
-        width: 48,
+        width: isMobile ? 56 : 48,
       }}>
         <button
-          style={toolbarBtnStyleSmall}
+          style={{ ...toolbarBtnStyleSmall, width: isMobile ? 40 : 32, height: isMobile ? 40 : 32 }}
           title="Add Text"
           draggable
           onDragStart={(e) => {
@@ -739,7 +800,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
           <Type size={20} />
         </button>
         <button 
-          style={toolbarBtnStyleSmall} 
+          style={{ ...toolbarBtnStyleSmall, width: isMobile ? 40 : 32, height: isMobile ? 40 : 32 }} 
           title="Add Page"
           draggable
           onDragStart={(e) => {
@@ -758,7 +819,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
           <FileText size={20} />
         </button>
         <button
-          style={toolbarBtnStyleSmall}
+          style={{ ...toolbarBtnStyleSmall, width: isMobile ? 40 : 32, height: isMobile ? 40 : 32 }}
           title="Generate Network JSON"
           onClick={(e) => {
             e.stopPropagation();
@@ -871,6 +932,49 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
             data-element-id={element.id}
             onMouseEnter={() => setHoveredElement(element.id)}
             onMouseLeave={() => setHoveredElement(null)}
+            onTouchStart={(e) => {
+              if (e.touches.length !== 1) return;
+              const t = e.touches[0];
+              setHoveredElement(element.id);
+              // double-tap detection
+              touchTapCount.current += 1;
+              if (touchTapTimer.current) clearTimeout(touchTapTimer.current);
+              touchTapTimer.current = setTimeout(() => { touchTapCount.current = 0; }, 300);
+              if (touchTapCount.current === 2) {
+                touchTapCount.current = 0;
+                if (element.type === 'page') { e.stopPropagation(); setEditingElement(element.id); return; }
+                if (element.type === 'text') { e.stopPropagation(); setEditingTextElement(element.id); return; }
+              }
+              // start drag
+              e.stopPropagation();
+              touchDragId.current = element.id;
+              const canvasX = (t.clientX - offset.x) / scale;
+              const canvasY = (t.clientY - offset.y) / scale;
+              touchDragStart.current = { x: canvasX - element.x, y: canvasY - element.y };
+              setSelectedElement(element.id);
+              setIsDraggingElement(true);
+            }}
+            onTouchMove={(e) => {
+              if (e.touches.length !== 1 || touchDragId.current !== element.id) return;
+              e.stopPropagation();
+              e.preventDefault();
+              const t = e.touches[0];
+              const canvasX = (t.clientX - offset.x) / scale;
+              const canvasY = (t.clientY - offset.y) / scale;
+              setElements(prev => prev.map(el => {
+                if (el.id !== element.id || !touchDragStart.current) return el;
+                const newEl = { ...el, x: canvasX - touchDragStart.current!.x, y: canvasY - touchDragStart.current!.y };
+                const { x, y } = getSnapPosition(newEl);
+                return { ...el, x, y };
+              }));
+            }}
+            onTouchEnd={() => {
+              touchDragId.current = null;
+              touchDragStart.current = null;
+              setIsDraggingElement(false);
+              setSelectedElement(null);
+              setTimeout(() => setHoveredElement(null), 1200);
+            }}
             onMouseDown={(e) => {
               if (e.detail === 2) return;
               if ((e.target as HTMLElement).closest('[data-status-dropdown]')) return;
@@ -1412,7 +1516,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
       })()}
 
       {/* Instructions */}
-      <div style={{
+      {!isMobile && <div style={{
         position: 'fixed',
         bottom: 24,
         left: 24,
@@ -1429,7 +1533,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         <div><b>Zoom:</b> Ctrl/Cmd + Scroll</div>
         <div><b>Connect:</b> Click icon on page</div>
         <div><b>Cancel:</b> Press Esc</div>
-      </div>
+      </div>}
 
       {/* Position Tooltip - Shows coordinates on page hover */}
       {hoveredElement && elements.find(el => el.id === hoveredElement)?.type === 'page' && (

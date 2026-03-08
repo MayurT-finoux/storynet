@@ -92,17 +92,11 @@ function App() {
   };
 
   const handleCreateConnection = (fromId: string, toId: string) => {
-    // Avoid duplicate connections
-    if (connections.some(conn => conn.fromId === fromId && conn.toId === toId)) {
-      return;
-    }
-    
-    const newConnection: ConnectionData = {
-      id: `conn-${Date.now()}`,
-      fromId,
-      toId,
-    };
-    setConnections(prev => [...prev, newConnection]);
+    if (connections.some(conn => conn.fromId === fromId && conn.toId === toId)) return;
+    // Limit: max 5 outgoing (next) from fromId, max 5 incoming (prev) to toId
+    if (connections.filter(c => c.fromId === fromId).length >= 5) return;
+    if (connections.filter(c => c.toId === toId).length >= 5) return;
+    setConnections(prev => [...prev, { id: `conn-${Date.now()}`, fromId, toId }]);
   };
 
   const handleDeleteConnection = (connectionId: string) => {

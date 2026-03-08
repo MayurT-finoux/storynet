@@ -742,6 +742,11 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         touchAction: 'none',
       }}
     >
+      {/* Browser indicator */}
+      <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 51, background: isMobile ? '#000' : '#2563eb', color: '#fff', padding: '3px 12px', borderRadius: 9999, fontSize: 12, fontWeight: 600, pointerEvents: 'none' }}>
+        {isMobile ? 'mobile' : 'desktop'}
+      </div>
+
       {/* Left vertical toolbar */}
       <div style={{
         position: 'fixed',
@@ -922,9 +927,6 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         {/* Debug element count */}
         <div style={{ position: 'absolute', top: 10, left: 10, color: 'black', background: 'white', padding: 5 }}>
           Elements: {elements.length}
-        </div>
-        <div style={{ position: 'absolute', top: 10, left: 60, color: '#fff', background: isMobile ? '#000' : '#2563eb', padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, pointerEvents: 'none', zIndex: 20 }}>
-          {isMobile ? 'mobile' : 'desktop'}
         </div>
         
         {elements.map((element: CanvasElementData) => (

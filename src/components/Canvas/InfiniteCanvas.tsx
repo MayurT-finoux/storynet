@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Type, FileText, ZoomIn, ZoomOut, Maximize2, Grid3x3, Trash2, Network, User, X, Upload, Copy, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Type, FileText, ZoomIn, ZoomOut, Maximize2, Grid3x3, Trash2, Network, User, X, Upload, Copy, ChevronLeft, ChevronRight, Sun, Moon } from 'lucide-react';
 import { CanvasElementData, ConnectionData } from '../../types/canvas';
 import { Character } from '../../types/character';
 import RichTextEditor from '../RichTextEditor';
@@ -25,6 +25,8 @@ export interface InfiniteCanvasProps {
   onGenerateNetwork: () => Record<string, any>;
   onImportNetwork: (elements: CanvasElementData[], connections: ConnectionData[]) => void;
   onUpdateStatus: (elementId: string, status: 'draft'|'idea'|'done') => void;
+  onDarkModeChange?: (dark: boolean) => void;
+  darkMode?: boolean;
 }
 
 const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
@@ -41,9 +43,24 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
   onGenerateNetwork,
   onImportNetwork,
   onUpdateStatus,
+  onDarkModeChange,
+  darkMode: darkModeProp = false,
 }: InfiniteCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+  const [darkMode, setDarkMode] = useState(darkModeProp);
+  const toggleDark = (v: boolean) => { setDarkMode(v); onDarkModeChange?.(v); };
+  const dm = {
+    bg: darkMode ? '#111' : '#f5f5f7',
+    card: darkMode ? '#1e1e1e' : '#fff',
+    border: darkMode ? '#333' : '#ececf0',
+    text: darkMode ? '#f0f0f0' : '#111',
+    subtext: darkMode ? '#888' : '#9ca3af',
+    toolbar: darkMode ? '#1e1e1e' : '#fff',
+    toolbarBorder: darkMode ? '#333' : '#e5e7eb',
+    overlay: darkMode ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.3)',
+    gridLine: darkMode ? '#2a2a2a' : '#e5e7eb',
+  };
 
   // status dropdown constants
   const statuses: Array<'draft'|'idea'|'done'> = ['draft','idea','done'];
@@ -593,18 +610,16 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
 
 
   const getBackgroundStyle = () => {
+    const g = dm.gridLine;
     if (patternType === 'grid') {
       return {
-        backgroundImage: `
-          linear-gradient(to right, #e5e7eb 1px, transparent 1px),
-          linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
-        `,
+        backgroundImage: `linear-gradient(to right, ${g} 1px, transparent 1px), linear-gradient(to bottom, ${g} 1px, transparent 1px)`,
         backgroundSize: `${40 * scale}px ${40 * scale}px`,
         backgroundPosition: `${offset.x}px ${offset.y}px`,
       };
     } else {
       return {
-        backgroundImage: `radial-gradient(circle, #e5e7eb 1.5px, transparent 1.5px)`,
+        backgroundImage: `radial-gradient(circle, ${g} 1.5px, transparent 1.5px)`,
         backgroundSize: `${40 * scale}px ${40 * scale}px`,
         backgroundPosition: `${offset.x}px ${offset.y}px`,
       };
@@ -677,7 +692,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         height: '100vh',
         overflow: 'hidden',
         position: 'relative',
-        background: '#f5f5f7',
+        background: dm.bg,
         cursor: draggedItemType ? 'copy' : (isPanning ? 'grabbing' : 'default'),
       }}
     >
@@ -688,10 +703,10 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         left: 20,
         transform: 'translateY(-50%)',
         zIndex: 51,
-        background: '#fff',
+        background: dm.toolbar,
         borderRadius: 16,
         boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-        border: '1.5px solid #e5e7eb',
+        border: `1.5px solid ${dm.toolbarBorder}`,
         padding: '10px 0',
         display: 'flex',
         flexDirection: 'column',
@@ -909,17 +924,17 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
               width: element.width,
               height: element.type === 'text' ? 'auto' : element.height,
               minHeight: element.type === 'text' ? 32 : undefined,
-              background: element.type === 'page' ? '#fff' : 'transparent',
+              background: element.type === 'page' ? dm.card : 'transparent',
               borderRadius: element.type === 'text' ? 6 : 16,
               boxShadow: selectedElement === element.id
-                ? (element.type === 'page' ? '0 0 0 2px #2563eb, 0 4px 16px rgba(0,0,0,0.08)' : 'none')
-                : (element.type === 'page' ? '0 4px 16px rgba(0,0,0,0.08)' : 'none'),
+                ? (element.type === 'page' ? `0 0 0 2px #2563eb, 0 4px 16px rgba(0,0,0,0.08)` : 'none')
+                : (element.type === 'page' ? `0 4px 16px rgba(0,0,0,${darkMode?'0.4':'0.08'})` : 'none'),
               border: element.type === 'page'
-                ? '1.5px solid #ececf0'
+                ? `1.5px solid ${dm.border}`
                 : (editingTextElement === element.id
-                    ? '1.5px solid #111'
+                    ? `1.5px solid ${dm.text}`
                     : (hoveredElement === element.id || selectedElement === element.id
-                        ? '1.5px dashed #aaa'
+                        ? `1.5px dashed ${dm.subtext}`
                         : '1.5px dashed transparent')),
               display: 'flex',
               flexDirection: 'column',
@@ -1061,7 +1076,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
               style={{
                 flex: 1,
                 padding: element.type === 'page' ? '18px 16px 12px 16px' : '6px 8px',
-                color: '#111',
+                color: dm.text,
                 fontSize: 15,
                 userSelect: editingTextElement === element.id ? 'text' : 'none',
                 overflow: 'visible',
@@ -1151,13 +1166,13 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                   position: 'absolute',
                   bottom: -14,
                   left: 8,
-                  background: '#000',
+                  background: darkMode ? '#f0f0f0' : '#000',
                   padding: '2px 8px',
                   borderRadius: 9999,
                   fontSize: 12,
                   cursor: 'pointer',
                   zIndex: 90,
-                  color: '#fff',
+                  color: darkMode ? '#000' : '#fff',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -1169,8 +1184,8 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                       position: 'absolute',
                       top: '100%',
                       left: 0,
-                      background: 'white',
-                      border: '1px solid #e5e7eb',
+                      background: dm.card,
+                      border: `1px solid ${dm.border}`,
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                       borderRadius: 8,
                       padding: 8,
@@ -1186,7 +1201,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                         style={{
                           padding:'8px 12px', 
                           cursor:'pointer',
-                          color: '#000',
+                          color: dm.text,
                           borderRadius: 4,
                           transition: 'background-color 0.2s',
                         }}
@@ -1212,10 +1227,10 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         bottom: 24,
         right: 24,
         zIndex: 50,
-        background: 'white',
+        background: dm.toolbar,
         borderRadius: 12,
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        border: '1px solid #e5e7eb',
+        border: `1px solid ${dm.toolbarBorder}`,
         padding: 12,
         display: 'flex',
         flexDirection: 'column',
@@ -1231,7 +1246,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         <button onClick={handleResetView} title="Reset View" style={iconBtnStyle}>
           <Maximize2 size={20} />
         </button>
-        <div style={{ width: '100%', height: 1, background: '#e5e7eb', margin: '8px 0' }} />
+        <div style={{ width: '100%', height: 1, background: dm.border, margin: '8px 0' }} />
         <button onClick={togglePattern} title={patternType === 'grid' ? 'Switch to Dots' : 'Switch to Grid'} style={iconBtnStyle}>
           {patternType === 'grid' ? (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1245,7 +1260,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
             <Grid3x3 size={20} />
           )}
         </button>
-        <div style={{ textAlign: 'center', fontSize: 12, color: '#666', marginTop: 4 }}>{Math.round(scale * 100)}%</div>
+        <div style={{ textAlign: 'center', fontSize: 12, color: dm.subtext, marginTop: 4 }}>{Math.round(scale * 100)}%</div>
       </div>
 
       {/* Page Editor Modal */}
@@ -1266,7 +1281,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
               display: 'flex', flexDirection: 'column',
               alignItems: side === 'left' ? 'flex-end' : 'flex-start',
               gap: '3px', padding: '10px 12px',
-              background: 'rgba(255,255,255,0.9)', border: '1.5px solid #ececf0',
+              background: darkMode ? 'rgba(30,30,30,0.92)' : 'rgba(255,255,255,0.9)', border: `1.5px solid ${dm.border}`,
               borderRadius: '12px', cursor: 'pointer',
               boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
               backdropFilter: 'blur(8px)', transition: 'all 0.15s',
@@ -1275,12 +1290,12 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fff'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#d1d5db'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.9)'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#ececf0'; }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#9ca3af', fontSize: 11 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', color: dm.subtext, fontSize: 11 }}>
               {side === 'left' && <ChevronLeft size={11} />}
               <span>{side === 'left' ? 'Previous' : 'Next'}</span>
               {side === 'right' && <ChevronRight size={11} />}
             </div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#111', lineHeight: 1.3, wordBreak: 'break-all' }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: dm.text, lineHeight: 1.3, wordBreak: 'break-all' }}>
               {page.label || page.pageId || 'Page'}
             </div>
           </button>
@@ -1327,11 +1342,11 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
 
             <div
               style={{
-                background: 'white', borderRadius: '16px',
+                background: dm.card, borderRadius: '16px',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
                 display: 'flex', flexDirection: 'column',
                 width: '100%', maxWidth: '500px', height: '600px',
-                border: '1.5px solid #ececf0', overflow: 'hidden', position: 'relative',
+                border: `1.5px solid ${dm.border}`, overflow: 'hidden', position: 'relative',
               }}
               onClick={e => e.stopPropagation()}
             >
@@ -1342,7 +1357,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                 ref={editorRef}
                 contentEditable
                 suppressContentEditableWarning
-                style={{ flex: 1, padding: '16px', overflow: 'auto', outline: 'none', fontSize: '16px', lineHeight: '1.6', color: '#111827', background: '#ffffff', fontFamily: 'inherit' }}
+                style={{ flex: 1, padding: '16px', overflow: 'auto', outline: 'none', fontSize: '16px', lineHeight: '1.6', color: dm.text, background: dm.card, fontFamily: 'inherit' }}
                 onInput={e => {
                   const content = (e.currentTarget as HTMLDivElement).innerHTML;
                   setElements(prev => prev.map(el => el.id === editingElement ? { ...el, content } : el));
@@ -1464,10 +1479,10 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
           top: 24,
           right: 24,
           zIndex: 51,
-          background: '#fff',
+          background: dm.toolbar,
           borderRadius: 12,
           boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-          border: '1.5px solid #e5e7eb',
+          border: `1.5px solid ${dm.toolbarBorder}`,
           padding: '10px 12px',
           cursor: 'pointer',
           display: 'flex',
@@ -1476,15 +1491,43 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
           transition: 'all 0.2s',
         }}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.background = '#f5f5f7';
-          (e.currentTarget as HTMLButtonElement).style.borderColor = '#d1d5db';
+          (e.currentTarget as HTMLButtonElement).style.background = darkMode ? '#2a2a2a' : '#f5f5f7';
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.background = '#fff';
-          (e.currentTarget as HTMLButtonElement).style.borderColor = '#e5e7eb';
+          (e.currentTarget as HTMLButtonElement).style.background = dm.toolbar;
         }}
       >
-        <User size={20} color="#222" />
+        <User size={20} color={dm.text} />
+      </button>
+
+      {/* Dark mode toggle */}
+      <button
+        onClick={() => toggleDark(!darkMode)}
+        style={{
+          position: 'fixed',
+          top: 80,
+          right: 24,
+          zIndex: 51,
+          background: dm.toolbar,
+          borderRadius: 12,
+          boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+          border: `1.5px solid ${dm.toolbarBorder}`,
+          padding: '10px 12px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.2s',
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background = darkMode ? '#2a2a2a' : '#f5f5f7';
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background = dm.toolbar;
+        }}
+        title={darkMode ? 'Switch to Light' : 'Switch to Dark'}
+      >
+        {darkMode ? <Sun size={20} color={dm.text} /> : <Moon size={20} color={dm.text} />}
       </button>
 
       {/* JSON Modal */}
@@ -1499,7 +1542,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         >
           <div
             style={{
-              background: '#fff', borderRadius: '20px',
+              background: dm.card, borderRadius: '20px',
               boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 0 0 1.5px #ececf0',
               width: '100%', maxWidth: '560px', maxHeight: '82vh',
               overflow: 'hidden', display: 'flex', flexDirection: 'column',
@@ -1508,7 +1551,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
           >
             {/* Header */}
             <div style={{
-              padding: '16px', borderBottom: '1.5px solid #f3f4f6',
+              padding: '16px', borderBottom: `1.5px solid ${dm.border}`,
               display: 'flex', alignItems: 'center', gap: '10px',
             }}>
               {isImportMode && (
@@ -1558,7 +1601,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                       border: '1.5px solid #ececf0', borderRadius: '12px',
                       fontSize: '13px', fontFamily: 'Monaco, Consolas, monospace',
                       resize: 'none', outline: 'none', color: '#111',
-                      background: '#fafafa', boxSizing: 'border-box', lineHeight: '1.6',
+                      background: dm.bg, boxSizing: 'border-box', lineHeight: '1.6',
                     }}
                     onFocus={e => (e.currentTarget.style.borderColor = '#111')}
                     onBlur={e => (e.currentTarget.style.borderColor = '#ececf0')}
@@ -1618,7 +1661,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
               ) : (
                 <>
                   <pre style={{
-                    background: '#fafafa', border: '1.5px solid #ececf0',
+                    background: dm.bg, border: `1.5px solid ${dm.border}`,
                     borderRadius: '12px', padding: '14px',
                     fontSize: '13px', fontFamily: 'Monaco, Consolas, monospace',
                     color: '#374151', overflow: 'auto', margin: 0,

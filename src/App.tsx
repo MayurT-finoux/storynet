@@ -23,6 +23,7 @@ function App() {
   const [connections, setConnections] = useState<ConnectionData[]>([]);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isCharacterModalOpen, setIsCharacterModalOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   const handleAddPage = () => {
     const id = `page-${Date.now()}`;
@@ -177,6 +178,8 @@ function App() {
           setConnections(newConnections);
         }}
           onUpdateStatus={handleUpdateStatus}
+          darkMode={darkMode}
+          onDarkModeChange={setDarkMode}
       />
       
       <CharacterModal
@@ -186,6 +189,7 @@ function App() {
         onAddCharacter={handleAddCharacter}
         onUpdateCharacter={handleUpdateCharacter}
         onDeleteCharacter={handleDeleteCharacter}
+        darkMode={darkMode}
       />
     </div>
   );

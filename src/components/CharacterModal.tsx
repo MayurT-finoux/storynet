@@ -9,23 +9,24 @@ interface CharacterModalProps {
   onAddCharacter: (character: Omit<Character, 'id'>) => void;
   onUpdateCharacter: (id: string, character: Omit<Character, 'id'>) => void;
   onDeleteCharacter: (id: string) => void;
+  darkMode?: boolean;
 }
 
 type ModalView = 'list' | 'form' | 'preview';
 
-const inputStyle: React.CSSProperties = {
+const inputStyle = (dm: any): React.CSSProperties => ({
   width: '100%',
   padding: '10px 12px',
-  border: '1.5px solid #ececf0',
+  border: `1.5px solid ${dm.border}`,
   borderRadius: '10px',
   fontSize: '14px',
   outline: 'none',
-  background: '#fafafa',
+  background: dm.bg,
   boxSizing: 'border-box',
-  color: '#111',
+  color: dm.text,
   fontFamily: 'inherit',
   transition: 'border-color 0.15s',
-};
+});
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
@@ -53,8 +54,15 @@ const iconBtn: React.CSSProperties = {
 };
 
 const CharacterModal: React.FC<CharacterModalProps> = ({
-  isOpen, onClose, characters, onAddCharacter, onUpdateCharacter, onDeleteCharacter,
+  isOpen, onClose, characters, onAddCharacter, onUpdateCharacter, onDeleteCharacter, darkMode = false,
 }) => {
+  const dm = {
+    card: darkMode ? '#1e1e1e' : '#fff',
+    border: darkMode ? '#333' : '#ececf0',
+    text: darkMode ? '#f0f0f0' : '#111',
+    subtext: darkMode ? '#888' : '#9ca3af',
+    bg: darkMode ? '#111' : '#fafafa',
+  };
   const [view, setView] = useState<ModalView>('list');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
@@ -130,10 +138,10 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
         top: '10vh',
         width: '360px',
         maxHeight: '80vh',
-        background: '#fff',
+        background: dm.card,
         zIndex: 1000,
         borderRadius: '20px',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 0 0 1.5px #ececf0',
+        boxShadow: `0 4px 24px rgba(0,0,0,0.08), 0 0 0 1.5px ${dm.border}`,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -143,7 +151,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
         {/* Header */}
         <div style={{
           padding: '16px 16px 14px',
-          borderBottom: '1.5px solid #f3f4f6',
+          borderBottom: `1.5px solid ${dm.border}`,
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
@@ -158,7 +166,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
               <ChevronLeft size={16} color="#6b7280" />
             </button>
           )}
-          <span style={{ flex: 1, fontSize: '15px', fontWeight: '600', color: '#111' }}>
+          <span style={{ flex: 1, fontSize: '15px', fontWeight: '600', color: dm.text }}>
             {view === 'form' ? (editingId ? 'Edit Character' : 'New Character') :
              view === 'preview' ? previewCharacter?.name : 'Characters'}
           </span>
@@ -211,18 +219,19 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                     key={character.id}
                     onClick={() => { setPreviewId(character.id); setView('preview'); }}
                     style={{
-                      border: '1.5px solid #ececf0',
+                      border: `1.5px solid ${dm.border}`,
                       borderRadius: '12px',
                       padding: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '12px',
                       cursor: 'pointer',
+                      background: dm.card,
                       transition: 'all 0.15s',
                     }}
                     onMouseEnter={e => {
-                      (e.currentTarget as HTMLDivElement).style.background = '#fafafa';
-                      (e.currentTarget as HTMLDivElement).style.borderColor = '#d1d5db';
+                      (e.currentTarget as HTMLDivElement).style.background = darkMode ? '#2a2a2a' : '#fafafa';
+                      (e.currentTarget as HTMLDivElement).style.borderColor = darkMode ? '#444' : '#d1d5db';
                     }}
                     onMouseLeave={e => {
                       (e.currentTarget as HTMLDivElement).style.background = '#fff';
@@ -231,7 +240,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                   >
                     <Avatar character={character} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#111' }}>{character.name}</div>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: dm.text }}>{character.name}</div>
                       <div style={{
                         fontSize: '12px', color: '#9ca3af', marginTop: '2px',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -277,7 +286,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                   required
                   autoFocus
                   placeholder="Character name"
-                  style={inputStyle}
+                  style={inputStyle(dm)}
                   onFocus={e => (e.currentTarget.style.borderColor = '#111')}
                   onBlur={e => (e.currentTarget.style.borderColor = '#ececf0')}
                 />
@@ -290,7 +299,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                   value={formData.aliases}
                   onChange={e => setFormData(f => ({ ...f, aliases: e.target.value }))}
                   placeholder="e.g. Johnny, JD (comma separated)"
-                  style={inputStyle}
+                  style={inputStyle(dm)}
                   onFocus={e => (e.currentTarget.style.borderColor = '#111')}
                   onBlur={e => (e.currentTarget.style.borderColor = '#ececf0')}
                 />
@@ -303,7 +312,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                   onChange={e => setFormData(f => ({ ...f, description: e.target.value }))}
                   rows={4}
                   placeholder="Character description..."
-                  style={{ ...inputStyle, resize: 'vertical' }}
+                  style={{ ...inputStyle(dm), resize: 'vertical' }}
                   onFocus={e => (e.currentTarget.style.borderColor = '#111')}
                   onBlur={e => (e.currentTarget.style.borderColor = '#ececf0')}
                 />
@@ -388,7 +397,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <Avatar character={previewCharacter} size={72} />
                 <div>
-                  <div style={{ fontSize: '18px', fontWeight: '700', color: '#111' }}>{previewCharacter.name}</div>
+                  <div style={{ fontSize: '18px', fontWeight: '700', color: dm.text }}>{previewCharacter.name}</div>
                   {previewCharacter.aliases && previewCharacter.aliases.length > 0 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
                       {previewCharacter.aliases.map(alias => (

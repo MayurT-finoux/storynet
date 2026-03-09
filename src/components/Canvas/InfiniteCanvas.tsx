@@ -112,7 +112,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
     sortedNames.forEach(name => {
       const regex = new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
       highlightedText = highlightedText.replace(regex,
-        `<span data-char="${name}" style="color:#d32f2f;font-weight:bold;background-color:#ffebee;cursor:pointer;border-radius:3px;padding:0 2px">${name}</span>`
+        `<span data-char="${name}" style="color:#d32f2f;font-weight:bold;cursor:pointer;border-radius:3px;padding:0 2px">${name}</span>`
       );
     });
     return highlightedText;
@@ -1287,8 +1287,8 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
               backdropFilter: 'blur(8px)', transition: 'all 0.15s',
               maxWidth: '120px', width: '120px',
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fff'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#d1d5db'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.9)'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#ececf0'; }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = darkMode ? 'rgba(50,50,50,0.98)' : '#fff'; (e.currentTarget as HTMLButtonElement).style.borderColor = darkMode ? '#555' : '#d1d5db'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = darkMode ? 'rgba(30,30,30,0.92)' : 'rgba(255,255,255,0.9)'; (e.currentTarget as HTMLButtonElement).style.borderColor = darkMode ? '#333' : '#ececf0'; }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '3px', color: dm.subtext, fontSize: 11 }}>
               {side === 'left' && <ChevronLeft size={11} />}
@@ -1543,7 +1543,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
           <div
             style={{
               background: dm.card, borderRadius: '20px',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 0 0 1.5px #ececf0',
+              boxShadow: darkMode ? '0 4px 32px rgba(0,0,0,0.4)' : '0 4px 24px rgba(0,0,0,0.08), 0 0 0 1.5px #ececf0',
               width: '100%', maxWidth: '560px', maxHeight: '82vh',
               overflow: 'hidden', display: 'flex', flexDirection: 'column',
             }}
@@ -1557,21 +1557,21 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
               {isImportMode && (
                 <button
                   onClick={() => setIsImportMode(false)}
-                  style={{ background: 'none', border: '1.5px solid #ececf0', borderRadius: '8px', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#6b7280', flexShrink: 0 }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
+                  style={{ background: 'none', border: `1.5px solid ${dm.border}`, borderRadius: '8px', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: dm.subtext, flexShrink: 0 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = dm.bg)}
                   onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                 >
                   <ChevronLeft size={16} />
                 </button>
               )}
-              <span style={{ flex: 1, fontSize: '15px', fontWeight: '600', color: '#111' }}>
+              <span style={{ flex: 1, fontSize: '15px', fontWeight: '600', color: dm.text }}>
                 {isImportMode ? 'Import Network' : 'Page Network'}
               </span>
               {!isImportMode && (
                 <button
                   onClick={() => setIsImportMode(true)}
-                  style={{ background: 'none', border: '1.5px solid #ececf0', borderRadius: '8px', padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', color: '#374151' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
+                  style={{ background: 'none', border: `1.5px solid ${dm.border}`, borderRadius: '8px', padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', color: dm.text }}
+                  onMouseEnter={e => (e.currentTarget.style.background = dm.bg)}
                   onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                 >
                   <Upload size={13} /> Import
@@ -1579,8 +1579,8 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
               )}
               <button
                 onClick={() => { setShowJsonModal(false); setIsImportMode(false); }}
-                style={{ background: 'none', border: '1.5px solid #ececf0', borderRadius: '8px', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#6b7280', flexShrink: 0 }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
+                style={{ background: 'none', border: `1.5px solid ${dm.border}`, borderRadius: '8px', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: dm.subtext, flexShrink: 0 }}
+                onMouseEnter={e => (e.currentTarget.style.background = dm.bg)}
                 onMouseLeave={e => (e.currentTarget.style.background = 'none')}
               >
                 <X size={16} />
@@ -1598,20 +1598,20 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                     autoFocus
                     style={{
                       width: '100%', height: '280px', padding: '14px',
-                      border: '1.5px solid #ececf0', borderRadius: '12px',
+                      border: `1.5px solid ${dm.border}`, borderRadius: '12px',
                       fontSize: '13px', fontFamily: 'Monaco, Consolas, monospace',
-                      resize: 'none', outline: 'none', color: '#111',
+                      resize: 'none', outline: 'none', color: dm.text,
                       background: dm.bg, boxSizing: 'border-box', lineHeight: '1.6',
                     }}
-                    onFocus={e => (e.currentTarget.style.borderColor = '#111')}
-                    onBlur={e => (e.currentTarget.style.borderColor = '#ececf0')}
+                    onFocus={e => (e.currentTarget.style.borderColor = dm.text)}
+                    onBlur={e => (e.currentTarget.style.borderColor = dm.border)}
                   />
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                       onClick={() => setIsImportMode(false)}
-                      style={{ flex: 1, padding: '10px', border: '1.5px solid #ececf0', borderRadius: '10px', background: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
-                      onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+                      style={{ flex: 1, padding: '10px', border: `1.5px solid ${dm.border}`, borderRadius: '10px', background: dm.card, cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: dm.text, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = dm.bg)}
+                      onMouseLeave={e => (e.currentTarget.style.background = dm.card)}
                     >
                       <X size={14} /> Cancel
                     </button>
@@ -1664,7 +1664,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                     background: dm.bg, border: `1.5px solid ${dm.border}`,
                     borderRadius: '12px', padding: '14px',
                     fontSize: '13px', fontFamily: 'Monaco, Consolas, monospace',
-                    color: '#374151', overflow: 'auto', margin: 0,
+                    color: dm.text, overflow: 'auto', margin: 0,
                     whiteSpace: 'pre-wrap', lineHeight: '1.6', flex: 1,
                   }}>
                     {JSON.stringify(onGenerateNetwork(), null, 2)}
@@ -1672,9 +1672,9 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                       onClick={() => { setShowJsonModal(false); setIsImportMode(false); }}
-                      style={{ flex: 1, padding: '10px', border: '1.5px solid #ececf0', borderRadius: '10px', background: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
-                      onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+                      style={{ flex: 1, padding: '10px', border: `1.5px solid ${dm.border}`, borderRadius: '10px', background: dm.card, cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: dm.text, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = dm.bg)}
+                      onMouseLeave={e => (e.currentTarget.style.background = dm.card)}
                     >
                       <X size={14} /> Close
                     </button>

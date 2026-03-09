@@ -112,7 +112,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
     sortedNames.forEach(name => {
       const regex = new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
       highlightedText = highlightedText.replace(regex,
-        `<span data-char="${name}" style="color:#d32f2f;font-weight:bold;background-color:#ffebee;cursor:pointer;border-radius:3px;padding:0 2px">${name}</span>`
+        `<span data-char="${name}" style="color:#d32f2f;font-weight:bold;cursor:pointer;border-radius:3px;padding:0 2px">${name}</span>`
       );
     });
     return highlightedText;
@@ -1287,8 +1287,8 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
               backdropFilter: 'blur(8px)', transition: 'all 0.15s',
               maxWidth: '120px', width: '120px',
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fff'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#d1d5db'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.9)'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#ececf0'; }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = darkMode ? 'rgba(50,50,50,0.98)' : '#fff'; (e.currentTarget as HTMLButtonElement).style.borderColor = darkMode ? '#555' : '#d1d5db'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = darkMode ? 'rgba(30,30,30,0.92)' : 'rgba(255,255,255,0.9)'; (e.currentTarget as HTMLButtonElement).style.borderColor = darkMode ? '#333' : '#ececf0'; }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '3px', color: dm.subtext, fontSize: 11 }}>
               {side === 'left' && <ChevronLeft size={11} />}

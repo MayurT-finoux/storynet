@@ -715,7 +715,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         width: 48,
       }}>
         <button
-          style={toolbarBtnStyleSmall}
+          style={{...toolbarBtnStyleSmall, color: dm.text}}
           title="Add Text"
           draggable
           onDragStart={(e) => {
@@ -754,7 +754,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
           <Type size={20} />
         </button>
         <button 
-          style={toolbarBtnStyleSmall} 
+          style={{...toolbarBtnStyleSmall, color: dm.text}} 
           title="Add Page"
           draggable
           onDragStart={(e) => {
@@ -773,7 +773,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
           <FileText size={20} />
         </button>
         <button
-          style={toolbarBtnStyleSmall}
+          style={{...toolbarBtnStyleSmall, color: dm.text}}
           title="Generate Network JSON"
           onClick={(e) => {
             e.stopPropagation();
@@ -831,7 +831,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                 {/* Main connection line - Black, smooth curves */}
                 <path
                   d={pathData}
-                  stroke="#000000"
+                  stroke={dm.text}
                   strokeWidth="2"
                   fill="none"
                   strokeLinecap="round"
@@ -862,7 +862,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                   y1={startY}
                   x2={endX}
                   y2={endY}
-                  stroke="#000000"
+                  stroke={dm.text}
                   strokeWidth="2"
                   strokeDasharray="5,5"
                   opacity="0.5"
@@ -1109,7 +1109,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                     cursor: 'text',
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'break-word',
-                    color: '#111',
+                    color: dm.text,
                     minHeight: '1.5em',
                     width: '100%',
                     fontFamily: 'inherit',
@@ -1125,7 +1125,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                 />
               ) : (
                 <div
-                  style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: element.content ? '#111' : '#aaa' }}
+                  style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: element.content ? dm.text : dm.subtext }}
                   dangerouslySetInnerHTML={{
                     __html: element.content || (element.type === 'page' ? 'Double-click to edit...' : 'Double-click to edit...')
                   }}
@@ -1237,17 +1237,17 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         gap: 8,
         alignItems: 'center',
       }}>
-        <button onClick={handleZoomIn} title="Zoom In" style={iconBtnStyle}>
+        <button onClick={handleZoomIn} title="Zoom In" style={{...iconBtnStyle, color: dm.text}}>
           <ZoomIn size={20} />
         </button>
-        <button onClick={handleZoomOut} title="Zoom Out" style={iconBtnStyle}>
+        <button onClick={handleZoomOut} title="Zoom Out" style={{...iconBtnStyle, color: dm.text}}>
           <ZoomOut size={20} />
         </button>
-        <button onClick={handleResetView} title="Reset View" style={iconBtnStyle}>
+        <button onClick={handleResetView} title="Reset View" style={{...iconBtnStyle, color: dm.text}}>
           <Maximize2 size={20} />
         </button>
         <div style={{ width: '100%', height: 1, background: dm.border, margin: '8px 0' }} />
-        <button onClick={togglePattern} title={patternType === 'grid' ? 'Switch to Dots' : 'Switch to Grid'} style={iconBtnStyle}>
+        <button onClick={togglePattern} title={patternType === 'grid' ? 'Switch to Dots' : 'Switch to Grid'} style={{...iconBtnStyle, color: dm.text}}>
           {patternType === 'grid' ? (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="2" />
@@ -1432,13 +1432,13 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         bottom: 24,
         left: 24,
         zIndex: 50,
-        background: 'white',
+        background: dm.toolbar,
         borderRadius: 12,
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        border: '1px solid #e5e7eb',
+        border: `1px solid ${dm.toolbarBorder}`,
         padding: 16,
         fontSize: 14,
-        color: '#666',
+        color: dm.subtext,
       }}>
         <div><b>Pan:</b> Drag Canvas</div>
         <div><b>Zoom:</b> Ctrl/Cmd + Scroll</div>
@@ -1453,13 +1453,13 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
           bottom: 24,
           right: 100,
           zIndex: 50,
-          background: 'white',
+          background: dm.toolbar,
           borderRadius: 12,
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          border: '1px solid #e5e7eb',
+          border: `1px solid ${dm.toolbarBorder}`,
           padding: '12px 16px',
           fontSize: 13,
-          color: '#374151',
+          color: dm.text,
           fontFamily: 'monospace',
           fontWeight: '500',
           display: 'flex',

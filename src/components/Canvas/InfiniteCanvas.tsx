@@ -669,6 +669,9 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         } else if (touches.length === 1 && isPanning) {
           const t = touches[0];
           setOffset({ x: t.clientX - panStart.x, y: t.clientY - panStart.y });
+        } else if (touches.length === 1 && isConnecting) {
+          const t = touches[0];
+          setConnectingCursor({ x: t.clientX, y: t.clientY });
         }
       }}
       onTouchEnd={() => {
@@ -1011,6 +1014,14 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                 setConnectingFrom(null);
               }
             }}
+            onTouchEnd={(e) => {
+              if (isConnecting && connectingFrom && connectingFrom !== element.id && element.type === 'page') {
+                e.stopPropagation();
+                onCreateConnection(connectingFrom, element.id);
+                setIsConnecting(false);
+                setConnectingFrom(null);
+              }
+            }}
             style={{
               position: 'absolute',
               left: element.x,
@@ -1111,10 +1122,16 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                         }}
                         onMouseDown={(e) => {
                           e.stopPropagation();
-                          // Start connection drag
                           setIsConnecting(true);
                           setConnectingFrom(element.id);
                           setConnectingCursor({ x: e.clientX, y: e.clientY });
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          setIsConnecting(true);
+                          setConnectingFrom(element.id);
+                          const t = e.touches[0];
+                          setConnectingCursor({ x: t.clientX, y: t.clientY });
                         }}
                       >
                         <Network size={16} color={isConnecting && connectingFrom === element.id ? '#fff' : '#000'} />

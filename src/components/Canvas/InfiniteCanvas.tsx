@@ -694,8 +694,14 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         position: 'relative',
         background: dm.bg,
         cursor: draggedItemType ? 'copy' : (isPanning ? 'grabbing' : 'default'),
+        touchAction: 'none',
       }}
     >
+      {/* Browser indicator */}
+      <div style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 51, background: isMobile ? '#000' : '#2563eb', color: '#fff', padding: '3px 12px', borderRadius: 9999, fontSize: 12, fontWeight: 600, pointerEvents: 'none' }}>
+        {isMobile ? 'mobile' : 'desktop'}
+      </div>
+
       {/* Left vertical toolbar */}
       <div style={{
         position: 'fixed',

@@ -27,6 +27,8 @@ export interface InfiniteCanvasProps {
   onUpdateStatus: (elementId: string, status: 'draft'|'idea'|'done') => void;
   onDarkModeChange?: (dark: boolean) => void;
   darkMode?: boolean;
+  onBackToHome?: () => void;
+  projectName?: string;
 }
 
 const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
@@ -45,6 +47,8 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
   onUpdateStatus,
   onDarkModeChange,
   darkMode: darkModeProp = false,
+  onBackToHome,
+  projectName,
 }: InfiniteCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -1596,6 +1600,26 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
       )}
 
       {/* User Icon - Top Right */}
+      {onBackToHome && (
+        <button
+          onClick={onBackToHome}
+          style={{
+            position: 'fixed', top: 24, right: 148, zIndex: 51,
+            background: dm.toolbar, borderRadius: 12,
+            boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+            border: `1.5px solid ${dm.toolbarBorder}`,
+            padding: '10px 14px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 6,
+            fontSize: 13, fontWeight: 600, color: dm.text,
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = dm.bg; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = dm.toolbar; }}
+        >
+          <ChevronLeft size={15} />
+          {projectName ? projectName : 'Home'}
+        </button>
+      )}
+
       <button
         onClick={onOpenCharacterModal}
         style={{

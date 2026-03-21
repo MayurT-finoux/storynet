@@ -1104,19 +1104,27 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                     </button>
                 
                 {/* Connection button - right middle edge */}
-                {element.type === 'page' && !isConnecting && (
+                {element.type === 'page' && (
                   <button
                     className="connection-btn"
                     style={{
                           position: 'absolute', top: '50%', right: '-20px',
                           transform: 'translateY(-50%)', zIndex: 100,
                           width: '36px', height: '36px', borderRadius: '50%',
-                          backgroundColor: '#f5f5f5', border: 'none',
+                          backgroundColor: isConnecting && connectingFrom === element.id ? '#2563eb' : '#f5f5f5',
+                          border: isConnecting && connectingFrom === element.id ? '2px solid #1e40af' : 'none',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer', boxShadow: '0 6px 10px rgba(0,0,0,0.12)', padding: 0,
+                          cursor: 'pointer', boxShadow: '0 6px 10px rgba(0,0,0,0.12)',
+                          transition: 'background-color 0.12s ease-in-out', padding: 0,
                         }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#e5e5e5'; }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f5f5f5'; }}
+                        onMouseEnter={(e) => {
+                          if (!isConnecting || connectingFrom !== element.id)
+                            (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#e5e5e5';
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isConnecting || connectingFrom !== element.id)
+                            (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f5f5f5';
+                        }}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           setIsConnecting(true);
@@ -1126,37 +1134,22 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                         onTouchStart={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          setIsConnecting(true);
-                          setConnectingFrom(element.id);
-                          const t = e.touches[0];
-                          setConnectingCursor({ x: t.clientX, y: t.clientY });
+                          if (isConnecting && connectingFrom === element.id) {
+                            setIsConnecting(false); setConnectingFrom(null);
+                          } else {
+                            setIsConnecting(true);
+                            setConnectingFrom(element.id);
+                            const t = e.touches[0];
+                            setConnectingCursor({ x: t.clientX, y: t.clientY });
+                          }
                         }}
                       >
-                        <Network size={16} color="#000" />
+                        <Network size={16} color={isConnecting && connectingFrom === element.id ? '#fff' : '#000'} />
                       </button>
                 )}
 
-                {/* Connecting mode: source indicator */}
-                {element.type === 'page' && isConnecting && connectingFrom === element.id && (
-                  <button
-                    className="connection-btn"
-                    style={{
-                          position: 'absolute', top: '50%', right: '-20px',
-                          transform: 'translateY(-50%)', zIndex: 100,
-                          width: '36px', height: '36px', borderRadius: '50%',
-                          backgroundColor: '#2563eb', border: '2px solid #1e40af',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer', boxShadow: '0 6px 10px rgba(0,0,0,0.18)', padding: 0,
-                        }}
-                        onTouchStart={(e) => { e.stopPropagation(); e.preventDefault(); setIsConnecting(false); setConnectingFrom(null); }}
-                        onMouseDown={(e) => { e.stopPropagation(); setIsConnecting(false); setConnectingFrom(null); }}
-                      >
-                        <Network size={16} color="#fff" />
-                      </button>
-                )}
-
-                {/* Connecting mode: full-card tap target for other pages */}
-                {isConnecting && connectingFrom !== element.id && element.type === 'page' && (
+                {/* Mobile only: full-card tap target for other pages */}
+                {isMobile && isConnecting && connectingFrom !== element.id && element.type === 'page' && (
                   <div
                     style={{
                       position: 'absolute', inset: 0, zIndex: 200,
@@ -1556,8 +1549,8 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         <div><b>Cancel:</b> Press Esc</div>
       </div>}
 
-      {/* Connecting mode banner */}
-      {isConnecting && (
+      {/* Connecting mode banner - mobile only */}
+      {isMobile && isConnecting && (
         <div style={{
           position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
           zIndex: 200, background: '#2563eb', color: '#fff',

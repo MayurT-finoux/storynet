@@ -1,29 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import InfiniteCanvas from './components/Canvas/InfiniteCanvas';
 import CharacterModal from './components/CharacterModal';
+import LoginPage from './pages/LoginPage';
+import HomePage from './pages/HomePage';
 import { CanvasElementData, ConnectionData } from './types/canvas';
 import { Character } from './types/character';
+import { Project, ProjectData } from './types/project';
 import { CANVAS_SIZE } from './constants/canvas';
+import { useAuth } from './hooks/useAuth';
+import { useProjects } from './hooks/useProjects';
+
+type AppView = 'login' | 'home' | 'canvas';
 
 function App() {
-  const [elements, setElements] = useState<CanvasElementData[]>([
-    {
-      id: 'initial-page',
-      type: 'page',
-      x: CANVAS_SIZE / 2 - 90,
-      y: CANVAS_SIZE / 2 - 127,
-      width: 180,
-      height: 254,
-      label: 'Draft',
-      pageId: 'PG-A7B9-C2D4',
-      status: 'draft',
-    }
-  ]);
+  const { user, login, logout, loading: authLoading, error: authError } = useAuth();
+  const { saveProject } = useProjects(user?.id ?? null);
+  const [view, setView] = useState<AppView>(user ? 'home' : 'login');
+  const [activeProject, setActiveProject] = useState<Project | null>(null);
 
+  const [elements, setElements] = useState<CanvasElementData[]>([]);
   const [connections, setConnections] = useState<ConnectionData[]>([]);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isCharacterModalOpen, setIsCharacterModalOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+
+  // Auto-save every 30s when in canvas view
+  useEffect(() => {
+    if (view !== 'canvas' || !activeProject) return;
+    const interval = setInterval(() => {
+      saveProject(activeProject.id, { elements, connections, characters });
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [view, activeProject, elements, connections, characters]);
+
+  const handleOpenProject = (project: Project) => {
+    setActiveProject(project);
+    const data = project.data || { elements: [], connections: [], characters: [] };
+    setElements(data.elements?.length ? data.elements : [
+      {
+        id: 'initial-page',
+        type: 'page',
+        x: CANVAS_SIZE / 2 - 90,
+        y: CANVAS_SIZE / 2 - 127,
+        width: 180, height: 254,
+        label: 'Draft', pageId: 'PG-A7B9-C2D4', status: 'draft',
+      }
+    ]);
+    setConnections(data.connections || []);
+    setCharacters(data.characters || []);
+    setView('canvas');
+  };
+
+  const handleBackToHome = async () => {
+    if (activeProject) {
+      await saveProject(activeProject.id, { elements, connections, characters });
+    }
+    setView('home');
+    setActiveProject(null);
+  };
+
+  const handleLogin = async (username: string, password: string) => {
+    const ok = await login(username, password);
+    if (ok) setView('home');
+    return ok;
+  };
+
+  const handleLogout = () => {
+    logout();
+    setView('login');
+    setActiveProject(null);
+  };
 
   const handleAddPage = () => {
     const id = `page-${Date.now()}`;
@@ -160,6 +206,14 @@ function App() {
   };
 
   return (
+    <>
+      {view === 'login' && (
+        <LoginPage onLogin={handleLogin} loading={authLoading} error={authError} />
+      )}
+      {view === 'home' && user && (
+        <HomePage user={user} onLogout={handleLogout} onOpenProject={handleOpenProject} />
+      )}
+      {view === 'canvas' && (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <InfiniteCanvas
         elements={elements}
@@ -180,6 +234,8 @@ function App() {
           onUpdateStatus={handleUpdateStatus}
           darkMode={darkMode}
           onDarkModeChange={setDarkMode}
+          onBackToHome={handleBackToHome}
+          projectName={activeProject?.name}
       />
       
       <CharacterModal
@@ -191,7 +247,9 @@ function App() {
         onDeleteCharacter={handleDeleteCharacter}
         darkMode={darkMode}
       />
-    </div>
+      </div>
+      )}
+    </>
   );
 }
 

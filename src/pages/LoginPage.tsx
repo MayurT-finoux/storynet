@@ -45,9 +45,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, loading, error }) => {
         borderRadius: 20,
         border: '1.5px solid #ececf0',
         boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
-        padding: '40px 36px',
+        padding: '40px 44px',
         width: '100%',
-        maxWidth: 380,
+        maxWidth: 480,
       }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>

@@ -1594,23 +1594,31 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
 
       {/* User Icon - Top Right */}
       {onBackToHome && (
-        <button
-          onClick={onBackToHome}
-          style={{
-            position: 'fixed', top: 24, right: 148, zIndex: 51,
-            background: dm.toolbar, borderRadius: 12,
-            boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-            border: `1.5px solid ${dm.toolbarBorder}`,
-            padding: '10px 14px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 6,
-            fontSize: 13, fontWeight: 600, color: dm.text,
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = dm.bg; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = dm.toolbar; }}
-        >
-          <ChevronLeft size={15} />
-          {projectName ? projectName : 'Home'}
-        </button>
+        <div style={{
+          position: 'fixed', top: 24, left: 24, zIndex: 51,
+          display: 'flex', alignItems: 'center', gap: 10,
+          background: dm.toolbar, borderRadius: 12,
+          boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+          border: `1.5px solid ${dm.toolbarBorder}`,
+          padding: '8px 14px 8px 10px',
+        }}>
+          <button
+            onClick={onBackToHome}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 4,
+              fontSize: 12, fontWeight: 500, color: dm.subtext, padding: 0,
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = dm.text; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = dm.subtext; }}
+          >
+            <ChevronLeft size={14} /> Home
+          </button>
+          <span style={{ color: dm.border, fontSize: 14 }}>/</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: dm.text }}>
+            {projectName || 'Untitled'}
+          </span>
+        </div>
       )}
 
       <button

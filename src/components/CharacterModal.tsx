@@ -136,7 +136,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
         position: 'fixed',
         right: '24px',
         top: '10vh',
-        width: '360px',
+        width: '420px',
         maxHeight: '80vh',
         background: dm.card,
         zIndex: 1000,

@@ -66,9 +66,8 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout, onOpenProject }) =>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 14, color: '#666' }}>
-            Hi, <b style={{ color: '#111' }}>{user.username}</b>
-          </span>
+          <div style={{ width: 1, height: 20, background: '#ececf0' }} />
+          <span style={{ fontSize: 13, color: '#888' }}>{user.username}</span>
           <button
             onClick={onLogout}
             style={{
@@ -89,7 +88,7 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout, onOpenProject }) =>
       {/* Content */}
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px' }}>
         {/* Section header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, paddingBottom: 20, borderBottom: '1.5px solid #ececf0' }}>
           <div>
             <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111', margin: 0, letterSpacing: '-0.3px' }}>
               Your Projects

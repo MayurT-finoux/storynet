@@ -122,9 +122,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, loading, error }) => {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100vh',
       display: 'flex',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      overflow: 'hidden',
     }}>
       {/* Left panel — form */}
       <div style={{
@@ -229,6 +230,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, loading, error }) => {
       {/* Right panel — animated canvas */}
       <div style={{
         flex: 1,
+        height: '100%',
         background: '#111',
         position: 'relative',
         overflow: 'hidden',

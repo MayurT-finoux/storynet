@@ -921,22 +921,6 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
           }}
         >
           <defs>
-            <marker
-              id="arrowhead"
-              markerWidth="8" markerHeight="8"
-              refX="6" refY="3"
-              orient="auto"
-            >
-              <path d="M0,0 L0,6 L8,3 z" fill={dm.text} opacity="0.7" />
-            </marker>
-            <marker
-              id="arrowhead-preview"
-              markerWidth="8" markerHeight="8"
-              refX="6" refY="3"
-              orient="auto"
-            >
-              <path d="M0,0 L0,6 L8,3 z" fill={dm.text} opacity="0.4" />
-            </marker>
             <filter id="wire-shadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor={dm.text} floodOpacity="0.10" />
             </filter>
@@ -973,12 +957,10 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                 <path
                   d={pathData}
                   stroke={dm.text}
-                  strokeWidth="1.75"
+                  strokeWidth="2"
                   fill="none"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  opacity="0.55"
-                  markerEnd="url(#arrowhead)"
                   pointerEvents="none"
                 />
               </g>
@@ -1005,8 +987,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                   fill="none"
                   strokeDasharray="6,4"
                   strokeLinecap="round"
-                  opacity="0.4"
-                  markerEnd="url(#arrowhead-preview)"
+                  opacity="0.5"
                 />
               );
             })()

@@ -891,32 +891,15 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
             zIndex: 10,
           }}
         >
-          <defs>
-            <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L8,3 z" fill={dm.text} opacity="0.6" />
-            </marker>
-            <marker id="arrowhead-preview" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L8,3 z" fill={dm.text} opacity="0.35" />
-            </marker>
-          </defs>
-
           {/* Render existing connections */}
           {connections.map(connection => {
             const pathData = getConnectionPath(connection.fromId, connection.toId);
+            
             if (!pathData) return null;
+            
             return (
               <g key={connection.id}>
-                {/* Wide invisible hit area for easy click-to-delete */}
-                <path
-                  d={pathData}
-                  stroke="transparent"
-                  strokeWidth="16"
-                  fill="none"
-                  pointerEvents="stroke"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => onDeleteConnection(connection.id)}
-                />
-                {/* Main connection line */}
+                {/* Main connection line - Black, smooth curves */}
                 <path
                   d={pathData}
                   stroke={dm.text}
@@ -924,41 +907,47 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
                   fill="none"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  markerEnd="url(#arrowhead)"
-                  pointerEvents="none"
+                  pointerEvents="stroke"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => onDeleteConnection(connection.id)}
                 />
               </g>
             );
           })}
-
+          
           {/* Temporary connection line while dragging */}
           {isConnecting && connectingFrom && (
             (() => {
               const fromEl = elements.find(el => el.id === connectingFrom);
               if (!fromEl) return null;
-              const startX = fromEl.x + fromEl.width + 28;
+              
+              // Start from right edge of source page, centered vertically
+              const startX = fromEl.x + fromEl.width;
               const startY = fromEl.y + fromEl.height / 2;
               const endX = (connectingCursor.x - offset.x) / scale;
               const endY = (connectingCursor.y - offset.y) / scale;
-              const dx = endX - startX;
-              const dy = endY - startY;
-              const arm = Math.max(60, Math.sqrt(dx*dx + dy*dy) * 0.4);
-              const previewPath = `M ${startX} ${startY} C ${startX + arm} ${startY}, ${endX - arm} ${endY}, ${endX} ${endY}`;
+              
               return (
-                <path
-                  d={previewPath}
+                <line
+                  x1={startX}
+                  y1={startY}
+                  x2={endX}
+                  y2={endY}
                   stroke={dm.text}
                   strokeWidth="2"
-                  fill="none"
                   strokeDasharray="5,5"
-                  strokeLinecap="round"
                   opacity="0.5"
-                  markerEnd="url(#arrowhead-preview)"
                 />
               );
             })()
           )}
+          
+
         </svg>
+        {/* Debug element count */}
+        <div style={{ position: 'absolute', top: 10, left: 10, color: 'black', background: 'white', padding: 5 }}>
+          Elements: {elements.length}
+        </div>
         
         {elements.map((element: CanvasElementData) => (
           <div

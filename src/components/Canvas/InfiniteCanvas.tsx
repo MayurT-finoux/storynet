@@ -106,7 +106,8 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
   const [editingTextElement, setEditingTextElement] = useState<string | null>(null);
   const [resizingElement, setResizingElement] = useState<string | null>(null);
   const resizeStart = useRef<{ mouseX: number; mouseY: number; w: number; h: number } | null>(null);
-  const [draggedItemPosition, setDraggedItemPosition] = useState({ x: 0, y: 0 });
+  const [stackPrompt, setStackPrompt] = useState<{ draggedId: string; targetId: string; x: number; y: number } | null>(null);
+
 
   const pageCount = elements.filter(el => el.type === 'page').length;
   const [charTooltip, setCharTooltip] = useState<{ name: string; x: number; y: number } | null>(null);
@@ -377,9 +378,36 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
       }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: MouseEvent) => {
       setIsPanning(false);
       setIsDraggingElement(false);
+
+      // Overlap detection: if dragged page overlaps a connected page, offer to stack
+      if (isDraggingElement && selectedElement) {
+        const dragged = elements.find(el => el.id === selectedElement);
+        if (dragged && dragged.type === 'page') {
+          const connectedIds = connections
+            .filter(c => c.fromId === selectedElement || c.toId === selectedElement)
+            .map(c => c.fromId === selectedElement ? c.toId : c.fromId);
+
+          for (const otherId of connectedIds) {
+            const other = elements.find(el => el.id === otherId);
+            if (!other) continue;
+            const overlapX = Math.max(0, Math.min(dragged.x + dragged.width, other.x + other.width) - Math.max(dragged.x, other.x));
+            const overlapY = Math.max(0, Math.min(dragged.y + dragged.height, other.y + other.height) - Math.max(dragged.y, other.y));
+            const overlapArea = overlapX * overlapY;
+            const draggedArea = dragged.width * dragged.height;
+            // Trigger if overlap is more than 30% of the dragged card
+            if (overlapArea > draggedArea * 0.3) {
+              const screenX = (other.x + other.width / 2) * scale + offset.x;
+              const screenY = (other.y + other.height / 2) * scale + offset.y;
+              setStackPrompt({ draggedId: selectedElement, targetId: otherId, x: screenX, y: screenY });
+              break;
+            }
+          }
+        }
+      }
+
       setSelectedElement(null);
       if (resizingElement) {
         setResizingElement(null);
@@ -389,8 +417,6 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         setIsConnecting(false);
         setConnectingFrom(null);
       }
-      
-
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -399,7 +425,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isPanning, isDraggingElement, selectedElement, panStart, dragStart, offset, isConnecting, connectingFrom, resizingElement, scale]);
+  }, [isPanning, isDraggingElement, selectedElement, panStart, dragStart, offset, isConnecting, connectingFrom, resizingElement, scale, connections, elements]);
 
   const handleZoomIn = () => {
     const newScale = Math.min(MAX_SCALE, scale + 0.1);
@@ -1586,6 +1612,85 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         <div><b>Connect:</b> Click icon on page</div>
         <div><b>Cancel:</b> Press Esc</div>
       </div>}
+
+      {/* Connecting mode banner - mobile only */}
+      {isMobile && isConnecting && (
+        <div style={{
+          position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 200, background: '#2563eb', color: '#fff',
+          borderRadius: 12, padding: '10px 20px',
+          fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 12,
+          boxShadow: '0 4px 16px rgba(37,99,235,0.3)',
+        }}>
+          <span>Tap a page to connect</span>
+          <button
+            onTouchEnd={(e) => { e.stopPropagation(); setIsConnecting(false); setConnectingFrom(null); }}
+            onClick={() => { setIsConnecting(false); setConnectingFrom(null); }}
+            style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 8, color: '#fff', padding: '4px 10px', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}
+          >Cancel</button>
+        </div>
+      )}
+
+      {/* Stack prompt — shown when a connected page is dragged on top of another */}
+      {stackPrompt && (
+        <div style={{
+          position: 'fixed',
+          left: Math.min(stackPrompt.x, window.innerWidth - 220),
+          top: Math.max(stackPrompt.y - 80, 12),
+          zIndex: 300,
+          background: dm.toolbar,
+          border: `1.5px solid ${dm.toolbarBorder}`,
+          borderRadius: 14,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
+          padding: '14px 16px',
+          minWidth: 200,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        }}>
+          {/* Stack preview illustration */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <div style={{ position: 'relative', width: 36, height: 28, flexShrink: 0 }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, width: 28, height: 20, borderRadius: 5, background: dm.border, border: `1.5px solid ${dm.toolbarBorder}` }} />
+              <div style={{ position: 'absolute', top: 6, left: 6, width: 28, height: 20, borderRadius: 5, background: dm.toolbar, border: `1.5px solid ${dm.text}`, opacity: 0.9 }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: dm.text }}>Stack pages?</div>
+              <div style={{ fontSize: 11, color: dm.subtext, marginTop: 1 }}>Arrange diagonally offset</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => {
+                const target = elements.find(el => el.id === stackPrompt.targetId);
+                if (target) {
+                  setElements(prev => prev.map(el =>
+                    el.id === stackPrompt.draggedId
+                      ? { ...el, x: target.x + 22, y: target.y + 22 }
+                      : el
+                  ));
+                }
+                setStackPrompt(null);
+              }}
+              style={{
+                flex: 1, padding: '7px 0', border: 'none', borderRadius: 9,
+                background: dm.text, color: dm.toolbar,
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              Stack
+            </button>
+            <button
+              onClick={() => setStackPrompt(null)}
+              style={{
+                flex: 1, padding: '7px 0', border: `1.5px solid ${dm.toolbarBorder}`, borderRadius: 9,
+                background: 'none', color: dm.subtext,
+                fontSize: 12, fontWeight: 500, cursor: 'pointer',
+              }}
+            >
+              Keep here
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Connecting mode banner - mobile only */}
       {isMobile && isConnecting && (

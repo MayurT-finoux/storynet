@@ -534,83 +534,86 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
     };
   };
 
+  // Returns the best exit/entry edge point and direction normal for a pair of elements
   const getConnectionPoints = (fromId: string, toId: string) => {
     const fromEl = elements.find(el => el.id === fromId);
     const toEl = elements.find(el => el.id === toId);
-    
     if (!fromEl || !toEl) return null;
-    
-    // Get element bounds
-    const fromRight = fromEl.x + fromEl.width;
-    const fromLeft = fromEl.x;
-    const fromTop = fromEl.y;
-    const fromBottom = fromEl.y + fromEl.height;
-    const fromCenterY = fromEl.y + fromEl.height / 2;
-    
-    const toRight = toEl.x + toEl.width;
-    const toLeft = toEl.x;
-    const toTop = toEl.y;
-    const toBottom = toEl.y + toEl.height;
-    const toCenterY = toEl.y + toEl.height / 2;
-    
-    // Determine closest edges and connection points
-    let fromPoint = { x: fromRight, y: fromCenterY };
-    let toPoint = { x: toLeft, y: toCenterY };
-    
-    // If target is to the left, connect left-to-right
-    if (toRight < fromLeft) {
-      fromPoint = { x: fromLeft, y: fromCenterY };
-      toPoint = { x: toRight, y: toCenterY };
+
+    const fCX = fromEl.x + fromEl.width / 2;
+    const fCY = fromEl.y + fromEl.height / 2;
+    const tCX = toEl.x + toEl.width / 2;
+    const tCY = toEl.y + toEl.height / 2;
+
+    // Gap clearance so lines never cross the connection button (button is at right:-20px, 36px wide)
+    const EDGE_CLEAR = 28;
+
+    // Score each of the 4 exit edges on the source against 4 entry edges on the target
+    // Pick the pair with shortest center-to-center distance along that axis
+    const candidates: Array<{
+      from: { x: number; y: number; nx: number; ny: number };
+      to: { x: number; y: number; nx: number; ny: number };
+      dist: number;
+    }> = [
+      // right → left
+      {
+        from: { x: fromEl.x + fromEl.width + EDGE_CLEAR, y: fCY, nx: 1, ny: 0 },
+        to:   { x: toEl.x - EDGE_CLEAR,                  y: tCY, nx: -1, ny: 0 },
+        dist: Math.abs(tCX - fCX) + Math.abs(tCY - fCY) * 0.3,
+      },
+      // left → right
+      {
+        from: { x: fromEl.x - EDGE_CLEAR, y: fCY, nx: -1, ny: 0 },
+        to:   { x: toEl.x + toEl.width + EDGE_CLEAR, y: tCY, nx: 1, ny: 0 },
+        dist: Math.abs(tCX - fCX) + Math.abs(tCY - fCY) * 0.3,
+      },
+      // bottom → top
+      {
+        from: { x: fCX, y: fromEl.y + fromEl.height + EDGE_CLEAR, nx: 0, ny: 1 },
+        to:   { x: tCX, y: toEl.y - EDGE_CLEAR,                   nx: 0, ny: -1 },
+        dist: Math.abs(tCY - fCY) + Math.abs(tCX - fCX) * 0.3,
+      },
+      // top → bottom
+      {
+        from: { x: fCX, y: fromEl.y - EDGE_CLEAR, nx: 0, ny: -1 },
+        to:   { x: tCX, y: toEl.y + toEl.height + EDGE_CLEAR, nx: 0, ny: 1 },
+        dist: Math.abs(tCY - fCY) + Math.abs(tCX - fCX) * 0.3,
+      },
+    ];
+
+    // Prefer right→left when target is clearly to the right, left→right when clearly to the left
+    const dx = tCX - fCX;
+    const dy = tCY - fCY;
+    let best;
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      best = dx >= 0 ? candidates[0] : candidates[1];
+    } else {
+      best = dy >= 0 ? candidates[2] : candidates[3];
     }
-    // If target is above, connect top-to-bottom
-    else if (toBottom < fromTop) {
-      fromPoint = { x: fromEl.x + fromEl.width / 2, y: fromTop };
-      toPoint = { x: toEl.x + toEl.width / 2, y: toBottom };
-    }
-    // If target is below, connect bottom-to-top
-    else if (toTop > fromBottom) {
-      fromPoint = { x: fromEl.x + fromEl.width / 2, y: fromBottom };
-      toPoint = { x: toEl.x + toEl.width / 2, y: toTop };
-    }
-    // Default: right-to-left (target to the right)
-    
-    return { fromPoint, toPoint };
+
+    return { fromPoint: { x: best.from.x, y: best.from.y }, toPoint: { x: best.to.x, y: best.to.y },
+             fromNormal: { x: best.from.nx, y: best.from.ny }, toNormal: { x: best.to.nx, y: best.to.ny } };
   };
 
   const getConnectionPath = (fromId: string, toId: string) => {
-    const points = getConnectionPoints(fromId, toId);
-    if (!points) return null;
+    const pts = getConnectionPoints(fromId, toId);
+    if (!pts) return null;
+    const { fromPoint, toPoint, fromNormal, toNormal } = pts;
 
-    const { fromPoint, toPoint } = points;
     const dx = toPoint.x - fromPoint.x;
     const dy = toPoint.y - fromPoint.y;
-    
-    // Determine if horizontal or vertical connection
-    const isHorizontal = Math.abs(dx) > Math.abs(dy);
-    
-    if (isHorizontal) {
-      // Horizontal connection - use larger control offset for better curves
-      const controlOffset = Math.max(Math.abs(dx) * 0.4, 60);
-      
-      const pathData = `
-        M ${fromPoint.x} ${fromPoint.y}
-        C ${fromPoint.x + controlOffset} ${fromPoint.y},
-          ${toPoint.x - controlOffset} ${toPoint.y},
-          ${toPoint.x} ${toPoint.y}
-      `;
-      return pathData;
-    } else {
-      // Vertical connection - use control points above/below
-      const controlOffset = Math.abs(dy) * 0.4;
-      
-      const pathData = `
-        M ${fromPoint.x} ${fromPoint.y}
-        C ${fromPoint.x} ${fromPoint.y + controlOffset},
-          ${toPoint.x} ${toPoint.y - controlOffset},
-          ${toPoint.x} ${toPoint.y}
-      `;
-      return pathData;
-    }
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // Adaptive control arm: longer when far, shorter when close, minimum 60px
+    // This prevents the ugly straight-line look when cards are nearby
+    const arm = Math.max(60, dist * 0.45);
+
+    const c1x = fromPoint.x + fromNormal.x * arm;
+    const c1y = fromPoint.y + fromNormal.y * arm;
+    const c2x = toPoint.x + toNormal.x * arm;
+    const c2y = toPoint.y + toNormal.y * arm;
+
+    return `M ${fromPoint.x} ${fromPoint.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${toPoint.x} ${toPoint.y}`;
   };
 
   const handleCancelConnection = () => {
@@ -891,63 +894,98 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
             zIndex: 10,
           }}
         >
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="8" markerHeight="8"
+              refX="6" refY="3"
+              orient="auto"
+            >
+              <path d="M0,0 L0,6 L8,3 z" fill={dm.text} opacity="0.7" />
+            </marker>
+            <marker
+              id="arrowhead-preview"
+              markerWidth="8" markerHeight="8"
+              refX="6" refY="3"
+              orient="auto"
+            >
+              <path d="M0,0 L0,6 L8,3 z" fill={dm.text} opacity="0.4" />
+            </marker>
+            <filter id="wire-shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor={dm.text} floodOpacity="0.10" />
+            </filter>
+          </defs>
+
           {/* Render existing connections */}
           {connections.map(connection => {
             const pathData = getConnectionPath(connection.fromId, connection.toId);
-            
             if (!pathData) return null;
-            
             return (
               <g key={connection.id}>
-                {/* Main connection line - Black, smooth curves */}
+                {/* Wide invisible hit area */}
                 <path
                   d={pathData}
-                  stroke={dm.text}
-                  strokeWidth="2"
+                  stroke="transparent"
+                  strokeWidth="16"
                   fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
                   pointerEvents="stroke"
                   style={{ cursor: 'pointer' }}
                   onClick={() => onDeleteConnection(connection.id)}
                 />
+                {/* Subtle glow / shadow layer */}
+                <path
+                  d={pathData}
+                  stroke={dm.text}
+                  strokeWidth="4"
+                  fill="none"
+                  strokeLinecap="round"
+                  opacity="0.06"
+                  filter="url(#wire-shadow)"
+                  pointerEvents="none"
+                />
+                {/* Main line */}
+                <path
+                  d={pathData}
+                  stroke={dm.text}
+                  strokeWidth="1.75"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity="0.55"
+                  markerEnd="url(#arrowhead)"
+                  pointerEvents="none"
+                />
               </g>
             );
           })}
-          
+
           {/* Temporary connection line while dragging */}
           {isConnecting && connectingFrom && (
             (() => {
               const fromEl = elements.find(el => el.id === connectingFrom);
               if (!fromEl) return null;
-              
-              // Start from right edge of source page, centered vertically
-              const startX = fromEl.x + fromEl.width;
+              const startX = fromEl.x + fromEl.width + 28;
               const startY = fromEl.y + fromEl.height / 2;
               const endX = (connectingCursor.x - offset.x) / scale;
               const endY = (connectingCursor.y - offset.y) / scale;
-              
+              const dx = endX - startX;
+              const arm = Math.max(60, Math.sqrt(dx*dx + (endY-startY)**2) * 0.4);
+              const pathData = `M ${startX} ${startY} C ${startX + arm} ${startY}, ${endX - arm} ${endY}, ${endX} ${endY}`;
               return (
-                <line
-                  x1={startX}
-                  y1={startY}
-                  x2={endX}
-                  y2={endY}
+                <path
+                  d={pathData}
                   stroke={dm.text}
-                  strokeWidth="2"
-                  strokeDasharray="5,5"
-                  opacity="0.5"
+                  strokeWidth="1.75"
+                  fill="none"
+                  strokeDasharray="6,4"
+                  strokeLinecap="round"
+                  opacity="0.4"
+                  markerEnd="url(#arrowhead-preview)"
                 />
               );
             })()
           )}
-          
-
         </svg>
-        {/* Debug element count */}
-        <div style={{ position: 'absolute', top: 10, left: 10, color: 'black', background: 'white', padding: 5 }}>
-          Elements: {elements.length}
-        </div>
         
         {elements.map((element: CanvasElementData) => (
           <div

@@ -571,8 +571,8 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
     const tCX = toEl.x + toEl.width / 2;
     const tCY = toEl.y + toEl.height / 2;
 
-    // Gap clearance so lines never cross the connection button (button is at right:-20px, 36px wide)
-    const EDGE_CLEAR = 28;
+    // Lines touch card edges directly
+    const EDGE_CLEAR = 0;
 
     // Score each of the 4 exit edges on the source against 4 entry edges on the target
     // Pick the pair with shortest center-to-center distance along that axis
@@ -917,7 +917,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
             width: CANVAS_SIZE,
             height: CANVAS_SIZE,
             pointerEvents: 'none',
-            zIndex: 10,
+            zIndex: 1,
           }}
         >
           <defs>

@@ -1,66 +1,35 @@
 # Text & Page Module
 
-This module covers the components responsible for the editable pages and the rich‑text editor dialog.
+This module covers how page and text-block content is actually edited in the running app. **Important:** the app does not use `RichTextPage.jsx` or `RichTextEditor.tsx` — both exist in `src/` but are unused dead code (imported nowhere, or imported and never rendered). The real editing UX is implemented inline inside `InfiniteCanvas.tsx`, described below.
 
-## `RichTextPage` Component
+## Live implementation (in `src/components/Canvas/InfiniteCanvas.tsx`)
+
+There are two distinct element types (`CanvasElementData.type`) with two distinct edit paths:
+
+### Pages (`type: 'page'`)
+- Double-clicking a page card sets `editingElement` to its id, which opens a full-screen modal.
+- The modal renders a plain `contentEditable` `<div>` (`editorRef`) — there is no formatting toolbar; whatever the browser's native contenteditable/keyboard shortcuts provide is all you get (no bold/italic/list buttons).
+- Edits are written to `elements` state live via the div's `onInput` handler — there is no explicit Save button, and the modal closes on outside-click.
+- The modal also renders a second, invisible overlay `<div>` on top of the real editable one: it shows the output of `highlightCharacters()` (see [Characters Module](./CHARACTERS_MODULE.md)) with transparent text but visible highlighted spans, so character names appear highlighted without needing a real rich-text engine to support inline styled spans inside contenteditable.
+- The modal also shows Previous/Next navigation cards, derived from `connections`, to jump between linked pages without leaving the modal.
+- The collapsed page card on the canvas itself just renders `element.content` directly — highlighting is **only** visible while a page is open in the edit modal, not on the canvas at large.
+
+### Text blocks (`type: 'text'`)
+- Free-floating text elements, distinct from pages, edited inline directly on the canvas (`editingTextElement` state) via their own `contentEditable` div — no modal involved.
+- Text blocks are the only element type that's resizable (via a custom drag handle), and are not valid connection targets.
+
+## Unused / legacy files
+
+### `RichTextPage.jsx`
 Location: `src/components/Canvas/RichTextPage.jsx`
 
-### Description
-A draggable, resizable container representing a "page". It embeds a TipTap editor and a header with controls.
+A draggable/resizable page component built on `@dnd-kit/core`'s `useDraggable` and a TipTap `EditorContent`, with its own connect button (`onStartConnect`/`onConnectTarget` props). It is not imported by `InfiniteCanvas.tsx`, `App.tsx`, or anything else — the only references to it are within its own file. It is a candidate for deletion; if you're touching page rendering/dragging/connecting, the real logic is in `InfiniteCanvas.tsx`, not here.
 
-### Props
-```ts
-{
-  id: string | number;
-  position: { x: number; y: number };
-  onStartConnect: (id: string) => void;
-  onConnectTarget: (id: string) => void;
-  style?: React.CSSProperties; // inherited from parent
-}
-```
-
-### Appearance & Behavior
-- Styled with `styled-components` to mimic a paper page (curl effect, shadows).
-- Header (`PageHeader`) contains page title and a `ConnectButton` (`+`) for linking.
-- Uses `@dnd-kit/core`'s `useDraggable` for drag interactions and `resize: both` CSS for resizing.
-- Clicking inside the editor does not propagate to the canvas.
-- `EditorContent` from TipTap holds the rich text; initial content is "Start writing here...".
-
-### Events
-- `handleResizeEnd` updates the component's internal size state.
-- `handleStartConnect`/`handleClick` manage connection interactions with the parent canvas.
-
-## `RichTextEditor` Component
+### `RichTextEditor.tsx`
 Location: `src/components/RichTextEditor.tsx`
 
-### Description
-A modal dialog with a WYSIWYG toolbar that appears when editing page content in a larger overlay.
-
-### Props
-```ts
-interface RichTextEditorProps {
-  content: string;
-  onSave: (content: string) => void;
-  onClose: () => void;
-}
-```
-
-### Features
-- Content editable `<div>` with formatting commands executed via `document.execCommand`.
-- Toolbar buttons for bold, italic, underline, alignment, lists, headings, indent, save, and close.
-- Automatically focuses on open and updates state via `onInput` events.
-- Styled using utility classes and icons from `lucide-react`.
-
-### Lifecycle
-- `useEffect` moves focus to the content area on mount.
-- `handleFormat` dispatches formatting commands.
-- `onSave` passes the edited HTML back to the parent and is typically used to update the corresponding canvas element.
-
-## Interaction Flow
-1. User double‑clicks or selects a page to edit (handled by parent component setting `editingElement`).
-2. `RichTextEditor` appears with the current HTML, allowing comprehensive formatting.
-3. Clicking Save closes the modal and updates the canvas element's `content`.
+A modal with a WYSIWYG toolbar (bold/italic/underline/alignment/lists/headings/indent via `document.execCommand`), props `{ content, onSave, onClose }`. It **is** imported into `InfiniteCanvas.tsx` but never rendered as JSX — a dead import. If a real formatting toolbar is ever wanted for the page edit modal, this file is the closest existing starting point, but it isn't wired up today.
 
 ---
 
-Refer to the source files for full styling details and any future updates. This module is key for the user’s core writing experience.
+If you're asked to add rich-text formatting controls, note that today's page editor is a bare `contentEditable` div — there's no toolbar infrastructure currently active to extend; you'd either wire up `RichTextEditor.tsx` or build fresh into the `InfiniteCanvas.tsx` edit modal.

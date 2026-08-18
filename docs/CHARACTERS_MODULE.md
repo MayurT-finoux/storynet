@@ -1,6 +1,6 @@
 # Characters Module
 
-Characters are first‑class objects in StoryNet that can be defined, edited, and then automatically highlighted within page content. They also feed into a simple network export feature.
+Characters are first-class objects that can be defined, edited, and automatically highlighted within page content. They also feed into the network export feature.
 
 ## Data Model
 `src/types/character.ts` defines:
@@ -8,9 +8,9 @@ Characters are first‑class objects in StoryNet that can be defined, edited, an
 export interface Character {
   id: string;
   name: string;
-  description?: string;
-  image?: string;       // base64 or URL
-  aliases?: string[];   // alternate names
+  description: string;  // required, not optional
+  image?: string;        // base64 or URL
+  aliases?: string[];    // alternate names
 }
 ```
 
@@ -21,9 +21,9 @@ Location: `src/components/CharacterModal.tsx`
 A floating modal used to list, add, edit, delete and preview characters.
 
 ### Views
-- **List view** – displays existing characters with buttons for edit, preview, and delete.
-- **Form view** – allows creation or update of a character's name, description, image (via upload) and comma‑separated aliases.
-- **Preview view** – shows a read‑only card with character details.
+- **List view** – existing characters; clicking a row opens its preview, with separate Edit and Delete icon buttons per row (there's no dedicated "preview" button — the whole row is the preview trigger).
+- **Form view** – create/update a character's name, description, image (via upload) and comma-separated aliases.
+- **Preview view** – read-only card with character details.
 
 ### Props
 ```ts
@@ -34,27 +34,30 @@ interface CharacterModalProps {
   onAddCharacter: (character: Omit<Character, 'id'>) => void;
   onUpdateCharacter: (id: string, character: Omit<Character, 'id'>) => void;
   onDeleteCharacter: (id: string) => void;
+  darkMode?: boolean;
 }
 ```
+`darkMode` drives a `dm` color-lookup object used throughout the modal's inline styles, same pattern as `InfiniteCanvas.tsx`.
 
 ### Features
-- Upload an image file; stored as base64 string.
-- Alias parsing: comma‑separated aliases trimmed and filtered.
-- List entries include hover states and preview/edit buttons.
-- Entire modal floats on the right side with blurred overlay background.
-- Animation on open (`floatIn`).
+- Upload an image file; stored as a base64 string.
+- Alias parsing: comma-separated aliases trimmed and filtered.
+- The overlay behind the modal is a plain invisible click-outside-to-close layer — `position: fixed; inset: 0` with no background color or blur, not a dimmed/frosted backdrop.
+- Slide-in animation on open (CSS keyframe `slideIn`, easing `cubic-bezier(0.16,1,0.3,1)`).
 
 ## Character Highlighting
-`InfiniteCanvas` exports `highlightCharacters(text)` which scans an HTML string for occurrences of each character name or alias (longest names first to avoid partial matches) and wraps matches in a styled `<span>`:
-```ts
-<span style="color: #d32f2f; font-weight: bold; background-color: #ffebee;">Name</span>
+`InfiniteCanvas.tsx` defines `highlightCharacters(text)`, which scans an HTML string for occurrences of each character's name or alias (longest names matched first, to avoid partial-match collisions) and wraps matches in a styled `<span>`:
+```html
+<span data-char="Name" style="color:#d32f2f;font-weight:bold;cursor:pointer;border-radius:3px;padding:0 2px">Name</span>
 ```
-This is applied when rendering page content so that characters stand out.
+The `data-char` attribute is what drives the hover tooltip (avatar + name + truncated description) shown when hovering a highlighted name — see [Canvas Module](./CANVAS_MODULE.md).
+
+**This only renders in one place**: the transparent overlay layer inside the page edit modal (see [Text & Page Module](./TEXT_MODULE.md)). The collapsed page card shown on the canvas itself renders raw `element.content` with no highlighting — you only see highlighted names while a page is open for editing.
 
 ## Network Generation / Import
-- Characters can be exported as a simple network object via `onGenerateNetwork` and re‑imported with `onImportNetwork`.
-- Details of the network schema are defined in `App.tsx` (or parent container) and are not part of the UI module itself.
+- Characters feed into the simplified network export/import via `onGenerateNetwork`/`onImportNetwork`.
+- The network schema itself is defined in `App.tsx`, not in this module.
 
 ---
 
-The characters module is optional but enhances storytelling by giving entities semantic meaning and inter‑page awareness.
+The characters module is optional but enhances storytelling by giving entities semantic meaning and inter-page awareness.

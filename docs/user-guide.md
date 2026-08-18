@@ -1,112 +1,57 @@
 # User Guide
 
-## Getting Started with StoryNet
+An end-user walkthrough of StoryNet. For implementation details, see the module docs linked from [docs/README.md](./README.md) instead — this file is for using the app, not building it.
 
-StoryNet is an infinite canvas application that allows you to create, organize, and connect rich text cards in a freeform space, similar to Apple's Freeform application.
+## Getting Started
 
-### Basic Navigation
+1. **Sign in** on the login screen with your username and password (there's no self-service sign-up — an account has to be created for you first).
+2. You'll land on the **Home** screen: a searchable grid of your projects. Create a new one or open an existing one.
+3. Opening or creating a project takes you into the **canvas** — the infinite, zoomable space where you map out pages, connections, and characters.
+4. Use the "Home / {project name}" breadcrumb at the top of the canvas to go back to your project list at any time. Your work is auto-saved roughly 30 seconds after your last edit, and also saved once more the moment you navigate back to Home.
 
-1. **Canvas Movement**
-   - **Pan**: Click and drag on empty canvas space
-   - **Zoom In/Out**: Use mouse wheel or pinch gesture
-   - **Reset View**: Double-click on empty space (if implemented)
+### Canvas Navigation
 
-### Working with Cards
+- **Pan**: click and drag on empty canvas space (or one-finger drag on touch devices).
+- **Zoom**: Ctrl/Cmd + scroll wheel, the zoom buttons in the toolbar, or a two-finger pinch on touch devices.
+- **Dark mode**: toggle via the sun/moon icon in the toolbar.
+- **Background**: switch between a dot grid and a line grid via the toolbar.
 
-1. **Creating a New Card**
-   - Click the "Add Page" button
-   - A new card will appear near the center of your view
-   - Start typing to add content
+### Working with Pages
 
-2. **Editing Cards**
-   - Click inside a card to start editing
-   - Use rich text formatting options:
-     - Bold
-     - Italic
-     - Lists
-     - Headings
-     - Code blocks
-
-3. **Moving Cards**
-   - Click and drag the card header to move
-   - Cards can be placed anywhere on the canvas
-
-4. **Resizing Cards**
-   - Grab the bottom-right corner
-   - Drag to resize the card
-   - Minimum size is enforced for readability
+1. **Creating a page** — click "Add Page" in the toolbar (or drag it onto the canvas). A new card appears.
+2. **Editing a page** — double-click it to open the full-screen editor. There's no formatting toolbar today (no bold/italic/lists) — it's plain text editing, saved automatically as you type, no separate Save button.
+3. **Moving a page** — click and drag it anywhere on the canvas.
+4. **Status** — hover a page's status tag (draft/idea/done) to change it from the dropdown that appears.
+5. Pages aren't resizable — only free-floating **text blocks** (added separately from pages) can be resized, via a drag handle on the corner.
 
 ### Creating Connections
 
-1. **Starting a Connection**
-   - Click the '+' button on the source card
-   - The canvas will enter connection mode
+1. Click the connect button on a page's header to start a connection.
+2. Click (or, on touch devices, tap) another page to complete it — a curved line appears linking the two. A page can't connect to itself.
+3. Each page allows at most **5 outgoing and 5 incoming connections** — once either limit is hit, further attempts from/to that page are simply ignored.
+4. The exact same connection (same two pages, same direction) can't be created twice.
+5. Connections automatically update their curve when either page is moved, and are removed automatically if either page is deleted.
 
-2. **Completing a Connection**
-   - Click on the target card
-   - A line will appear connecting the two cards
-   - Cards will remain connected when moved
+### Characters
 
-3. **Connection Rules**
-   - Cannot connect a card to itself
-   - Multiple connections between the same cards are prevented
-   - Connections automatically update when cards are moved
+- Open the Characters panel to add named characters with an optional image and comma-separated aliases.
+- While editing a page, any text matching a character's name or alias is automatically highlighted — hover a highlighted name to see that character's avatar and description.
+- Highlighting is only visible while a page is open for editing, not in its collapsed card view on the canvas.
 
-### Tips and Tricks
+### Tips
 
-1. **Efficient Navigation**
-   - Use zoom for overview or detailed work
-   - Pan to empty space before adding new cards
-   - Organize cards in logical groups
-
-2. **Content Organization**
-   - Use card size to indicate importance
-   - Create clear visual hierarchies
-   - Use connections to show relationships
-
-3. **Performance**
-   - The canvas supports many cards and connections
-   - Consider grouping related content
-   - Use meaningful connections
+- Use zoom for an overview, pan closer for detailed work.
+- Organize related pages into visual clusters; use connections to show relationships between them.
+- Mobile/touch is fully supported: pinch to zoom, drag to pan/move, tap-and-tap to connect two pages, double-tap to edit.
 
 ### Keyboard Shortcuts
 
-(To be implemented)
-- `Ctrl/Cmd + Z`: Undo
-- `Ctrl/Cmd + Y`: Redo
-- `Delete`: Remove selected card
-- `Escape`: Cancel current connection
+- **Escape** — cancel an in-progress connection.
 
-### Best Practices
-
-1. **Organization**
-   - Group related cards together
-   - Use consistent card sizes for similar content
-   - Create clear visual hierarchies
-
-2. **Connections**
-   - Use connections meaningfully
-   - Avoid crossing connections when possible
-   - Create clear flows of information
-
-3. **Content**
-   - Keep card content focused
-   - Use formatting to highlight important points
-   - Consider the overall visual layout
+That's currently the only keyboard shortcut — there's no undo/redo or Delete-key removal yet; deleting a page or text block is done via the toolbar's trash icon.
 
 ### Troubleshooting
 
-1. **Performance Issues**
-   - Try zooming out for better overview
-   - Consider reducing the number of visible connections
-   - Clear unused cards and connections
-
-2. **Connection Problems**
-   - Ensure you're clicking the correct target card
-   - Check if connection already exists
-   - Try canceling and restarting the connection
-
-3. **Editing Issues**
-   - Click outside and back in to reset editor focus
-   - Check for any unsaved changes
-   - Refresh the page if editor becomes unresponsive
+- **Login fails with correct-looking credentials** — accounts are created directly in the database; if you're not sure your account exists yet, check with whoever manages the project's Supabase instance.
+- **A save doesn't seem to have taken** — saves are silent (no confirmation toast today); give it ~30 seconds after your last edit, or navigate back to Home, which forces an immediate save.
+- **Editor seems unresponsive** — click outside the page's edit modal and back in to reset focus.

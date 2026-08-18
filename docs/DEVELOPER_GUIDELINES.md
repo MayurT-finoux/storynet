@@ -14,7 +14,7 @@ This document defines rules and conventions for anyone (including GPT‑based as
 
 ## Coding Conventions
 - Use TypeScript types wherever possible (the project mixes `.tsx` and `.jsx` but new code should prefer `.tsx`).
-- Keep styling self‑contained in components (either styled‑components or tailwind classes).
+- Keep styling self‑contained in components (`styled-components` or inline style objects — there's no Tailwind in this project).
 - Avoid inline `any`; define proper interfaces.
 - Use descriptive variable names: `offset`, `panStart`, `connectingFrom`, etc.
 - Factor out shared logic when it benefits clarity (e.g., connection point calculation).

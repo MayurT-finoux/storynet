@@ -62,7 +62,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
   const [darkMode, setDarkMode] = useState(darkModeProp);
   const toggleDark = (v: boolean) => { setDarkMode(v); onDarkModeChange?.(v); };
   const dm = {
-    bg: darkMode ? '#111' : '#f5f5f7',
+    bg: darkMode ? '#242424' : '#f5f5f7',
     card: darkMode ? '#1e1e1e' : '#fff',
     border: darkMode ? '#333' : '#ececf0',
     text: darkMode ? '#f0f0f0' : '#111',

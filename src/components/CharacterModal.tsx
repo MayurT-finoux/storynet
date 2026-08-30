@@ -28,19 +28,19 @@ const inputStyle = (dm: any): React.CSSProperties => ({
   transition: 'border-color 0.15s',
 });
 
-const labelStyle: React.CSSProperties = {
+const labelStyle = (dm: any): React.CSSProperties => ({
   display: 'block',
   marginBottom: '6px',
   fontSize: '12px',
   fontWeight: '600',
-  color: '#6b7280',
+  color: dm.subtext,
   textTransform: 'uppercase',
   letterSpacing: '0.05em',
-};
+});
 
-const iconBtn: React.CSSProperties = {
+const iconBtn = (dm: any): React.CSSProperties => ({
   background: 'none',
-  border: '1.5px solid #ececf0',
+  border: `1.5px solid ${dm.border}`,
   borderRadius: '8px',
   width: '32px',
   height: '32px',
@@ -48,10 +48,10 @@ const iconBtn: React.CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   cursor: 'pointer',
-  color: '#6b7280',
+  color: dm.subtext,
   flexShrink: 0,
   transition: 'all 0.15s',
-};
+});
 
 const CharacterModal: React.FC<CharacterModalProps> = ({
   isOpen, onClose, characters, onAddCharacter, onUpdateCharacter, onDeleteCharacter, darkMode = false,
@@ -60,8 +60,10 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
     card: darkMode ? '#1e1e1e' : '#fff',
     border: darkMode ? '#333' : '#ececf0',
     text: darkMode ? '#f0f0f0' : '#111',
-    subtext: darkMode ? '#888' : '#9ca3af',
+    subtext: '#9ca3af',
     bg: darkMode ? '#111' : '#fafafa',
+    chip: darkMode ? '#2a2a2a' : '#f3f4f6',
+    hover: darkMode ? '#2a2a2a' : '#f5f5f7',
   };
   const [view, setView] = useState<ModalView>('list');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -113,15 +115,15 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
     character.image ? (
       <img src={character.image} alt={character.name} style={{
         width: size, height: size, borderRadius: size * 0.4,
-        objectFit: 'cover', border: '1.5px solid #ececf0', flexShrink: 0,
+        objectFit: 'cover', border: `1.5px solid ${dm.border}`, flexShrink: 0,
       }} />
     ) : (
       <div style={{
         width: size, height: size, borderRadius: size * 0.4,
-        background: '#f3f4f6', border: '1.5px solid #ececf0',
+        background: dm.chip, border: `1.5px solid ${dm.border}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
       }}>
-        <User size={size * 0.45} color="#9ca3af" />
+        <User size={size * 0.45} color={dm.subtext} />
       </div>
     );
 
@@ -158,12 +160,12 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
         }}>
           {view !== 'list' && (
             <button
-              style={iconBtn}
+              style={iconBtn(dm)}
               onClick={() => { setView('list'); resetForm(); }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
+              onMouseEnter={e => (e.currentTarget.style.background = dm.hover)}
               onMouseLeave={e => (e.currentTarget.style.background = 'none')}
             >
-              <ChevronLeft size={16} color="#6b7280" />
+              <ChevronLeft size={16} color={dm.subtext} />
             </button>
           )}
           <span style={{ flex: 1, fontSize: '15px', fontWeight: '600', color: dm.text }}>
@@ -172,24 +174,30 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
           </span>
           {view === 'list' && (
             <button
-              style={{ ...iconBtn, background: '#000', border: 'none', color: '#fff', borderRadius: '8px' }}
+              style={{
+                ...iconBtn(dm),
+                background: darkMode ? '#f0f0f0' : '#000',
+                border: 'none',
+                color: darkMode ? '#000' : '#fff',
+                borderRadius: '8px',
+              }}
               onClick={() => { resetForm(); setView('form'); }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#222')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#000')}
+              onMouseEnter={e => (e.currentTarget.style.background = darkMode ? '#d4d4d4' : '#222')}
+              onMouseLeave={e => (e.currentTarget.style.background = darkMode ? '#f0f0f0' : '#000')}
               title="Add Character"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={darkMode ? '#000' : '#fff'} strokeWidth="2">
                 <path d="M12 5v14M5 12h14"/>
               </svg>
             </button>
           )}
           <button
-            style={iconBtn}
+            style={iconBtn(dm)}
             onClick={onClose}
-            onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
+            onMouseEnter={e => (e.currentTarget.style.background = dm.hover)}
             onMouseLeave={e => (e.currentTarget.style.background = 'none')}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={dm.subtext} strokeWidth="2">
               <path d="M18 6L6 18M6 6l12 12"/>
             </svg>
           </button>
@@ -201,15 +209,15 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
           {/* LIST */}
           {view === 'list' && (
             characters.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '48px 16px', color: '#9ca3af' }}>
+              <div style={{ textAlign: 'center', padding: '48px 16px', color: dm.subtext }}>
                 <div style={{
-                  width: 56, height: 56, borderRadius: 16, background: '#f3f4f6',
+                  width: 56, height: 56, borderRadius: 16, background: dm.chip,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   margin: '0 auto 14px',
                 }}>
-                  <User size={24} color="#d1d5db" />
+                  <User size={24} color={dm.subtext} />
                 </div>
-                <p style={{ margin: 0, fontSize: '14px', fontWeight: '500', color: '#374151' }}>No characters yet</p>
+                <p style={{ margin: 0, fontSize: '14px', fontWeight: '500', color: dm.text }}>No characters yet</p>
                 <p style={{ margin: '4px 0 0', fontSize: '13px' }}>Click + to add your first character</p>
               </div>
             ) : (
@@ -230,19 +238,19 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                       transition: 'all 0.15s',
                     }}
                     onMouseEnter={e => {
-                      (e.currentTarget as HTMLDivElement).style.background = darkMode ? '#2a2a2a' : '#fafafa';
+                      (e.currentTarget as HTMLDivElement).style.background = dm.hover;
                       (e.currentTarget as HTMLDivElement).style.borderColor = darkMode ? '#444' : '#d1d5db';
                     }}
                     onMouseLeave={e => {
-                      (e.currentTarget as HTMLDivElement).style.background = '#fff';
-                      (e.currentTarget as HTMLDivElement).style.borderColor = '#ececf0';
+                      (e.currentTarget as HTMLDivElement).style.background = dm.card;
+                      (e.currentTarget as HTMLDivElement).style.borderColor = dm.border;
                     }}
                   >
                     <Avatar character={character} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '14px', fontWeight: '600', color: dm.text }}>{character.name}</div>
                       <div style={{
-                        fontSize: '12px', color: '#9ca3af', marginTop: '2px',
+                        fontSize: '12px', color: dm.subtext, marginTop: '2px',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       }}>
                         {character.description || 'No description'}
@@ -250,18 +258,18 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                     </div>
                     <div style={{ display: 'flex', gap: '4px' }}>
                       <button
-                        style={iconBtn}
+                        style={iconBtn(dm)}
                         onClick={e => { e.stopPropagation(); handleEdit(character); }}
-                        onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
+                        onMouseEnter={e => (e.currentTarget.style.background = dm.hover)}
                         onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                         title="Edit"
                       >
-                        <Edit2 size={14} color="#6b7280" />
+                        <Edit2 size={14} color={dm.subtext} />
                       </button>
                       <button
-                        style={{ ...iconBtn, borderColor: '#fecaca', color: '#ef4444' }}
+                        style={{ ...iconBtn(dm), borderColor: '#fecaca', color: '#ef4444' }}
                         onClick={e => { e.stopPropagation(); onDeleteCharacter(character.id); }}
-                        onMouseEnter={e => (e.currentTarget.style.background = '#fff1f2')}
+                        onMouseEnter={e => (e.currentTarget.style.background = darkMode ? 'rgba(239,68,68,0.12)' : '#fff1f2')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                         title="Delete"
                       >
@@ -278,7 +286,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
           {view === 'form' && (
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Name *</label>
+                <label style={labelStyle(dm)}>Name *</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -287,45 +295,45 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                   autoFocus
                   placeholder="Character name"
                   style={inputStyle(dm)}
-                  onFocus={e => (e.currentTarget.style.borderColor = '#111')}
-                  onBlur={e => (e.currentTarget.style.borderColor = '#ececf0')}
+                  onFocus={e => (e.currentTarget.style.borderColor = dm.text)}
+                  onBlur={e => (e.currentTarget.style.borderColor = dm.border)}
                 />
               </div>
 
               <div>
-                <label style={labelStyle}>Aliases</label>
+                <label style={labelStyle(dm)}>Aliases</label>
                 <input
                   type="text"
                   value={formData.aliases}
                   onChange={e => setFormData(f => ({ ...f, aliases: e.target.value }))}
                   placeholder="e.g. Johnny, JD (comma separated)"
                   style={inputStyle(dm)}
-                  onFocus={e => (e.currentTarget.style.borderColor = '#111')}
-                  onBlur={e => (e.currentTarget.style.borderColor = '#ececf0')}
+                  onFocus={e => (e.currentTarget.style.borderColor = dm.text)}
+                  onBlur={e => (e.currentTarget.style.borderColor = dm.border)}
                 />
               </div>
 
               <div>
-                <label style={labelStyle}>Description</label>
+                <label style={labelStyle(dm)}>Description</label>
                 <textarea
                   value={formData.description}
                   onChange={e => setFormData(f => ({ ...f, description: e.target.value }))}
                   rows={4}
                   placeholder="Character description..."
                   style={{ ...inputStyle(dm), resize: 'vertical' }}
-                  onFocus={e => (e.currentTarget.style.borderColor = '#111')}
-                  onBlur={e => (e.currentTarget.style.borderColor = '#ececf0')}
+                  onFocus={e => (e.currentTarget.style.borderColor = dm.text)}
+                  onBlur={e => (e.currentTarget.style.borderColor = dm.border)}
                 />
               </div>
 
               <div>
-                <label style={labelStyle}>Image</label>
+                <label style={labelStyle(dm)}>Image</label>
                 <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} id="img-upload" />
                 {formData.image ? (
                   <div style={{ position: 'relative' }}>
                     <img src={formData.image} alt="Preview" style={{
                       width: '100%', height: '160px', borderRadius: '10px',
-                      objectFit: 'cover', border: '1.5px solid #ececf0', display: 'block',
+                      objectFit: 'cover', border: `1.5px solid ${dm.border}`, display: 'block',
                     }} />
                     <button
                       type="button"
@@ -343,20 +351,20 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                 ) : (
                   <label htmlFor="img-upload" style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                    padding: '14px', border: '1.5px dashed #d1d5db', borderRadius: '10px',
-                    cursor: 'pointer', fontSize: '13px', color: '#9ca3af', background: '#fafafa',
+                    padding: '14px', border: `1.5px dashed ${darkMode ? '#444' : '#d1d5db'}`, borderRadius: '10px',
+                    cursor: 'pointer', fontSize: '13px', color: dm.subtext, background: dm.bg,
                     transition: 'all 0.15s',
                   }}
                     onMouseEnter={e => {
-                      (e.currentTarget as HTMLLabelElement).style.borderColor = '#111';
-                      (e.currentTarget as HTMLLabelElement).style.color = '#111';
+                      (e.currentTarget as HTMLLabelElement).style.borderColor = dm.text;
+                      (e.currentTarget as HTMLLabelElement).style.color = dm.text;
                     }}
                     onMouseLeave={e => {
-                      (e.currentTarget as HTMLLabelElement).style.borderColor = '#d1d5db';
-                      (e.currentTarget as HTMLLabelElement).style.color = '#9ca3af';
+                      (e.currentTarget as HTMLLabelElement).style.borderColor = darkMode ? '#444' : '#d1d5db';
+                      (e.currentTarget as HTMLLabelElement).style.color = dm.subtext;
                     }}
                   >
-                    <Upload size={15} color="#9ca3af" /> Upload image
+                    <Upload size={15} color={dm.subtext} /> Upload image
                   </label>
                 )}
               </div>
@@ -366,26 +374,27 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                   type="button"
                   onClick={() => { setView('list'); resetForm(); }}
                   style={{
-                    flex: 1, padding: '10px', border: '1.5px solid #ececf0', borderRadius: '10px',
-                    background: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#374151',
+                    flex: 1, padding: '10px', border: `1.5px solid ${dm.border}`, borderRadius: '10px',
+                    background: dm.card, cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: dm.text,
                     transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+                  onMouseEnter={e => (e.currentTarget.style.background = dm.hover)}
+                  onMouseLeave={e => (e.currentTarget.style.background = dm.card)}
                 >
-                  <X size={14} color="#374151" /> Cancel
+                  <X size={14} color={dm.text} /> Cancel
                 </button>
                 <button
                   type="submit"
                   style={{
                     flex: 1, padding: '10px', border: 'none', borderRadius: '10px',
-                    background: '#000', color: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: '500',
+                    background: darkMode ? '#f0f0f0' : '#000', color: darkMode ? '#000' : '#fff',
+                    cursor: 'pointer', fontSize: '14px', fontWeight: '500',
                     transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#222')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '#000')}
+                  onMouseEnter={e => (e.currentTarget.style.background = darkMode ? '#d4d4d4' : '#222')}
+                  onMouseLeave={e => (e.currentTarget.style.background = darkMode ? '#f0f0f0' : '#000')}
                 >
-                  <UserPlus size={14} color="#fff" /> {editingId ? 'Save Changes' : 'Add Character'}
+                  <UserPlus size={14} color={darkMode ? '#000' : '#fff'} /> {editingId ? 'Save Changes' : 'Add Character'}
                 </button>
               </div>
             </form>
@@ -403,7 +412,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                       {previewCharacter.aliases.map(alias => (
                         <span key={alias} style={{
                           fontSize: '11px', padding: '2px 8px', borderRadius: '9999px',
-                          background: '#f3f4f6', color: '#6b7280', border: '1px solid #ececf0',
+                          background: dm.chip, color: dm.subtext, border: `1px solid ${dm.border}`,
                         }}>{alias}</span>
                       ))}
                     </div>
@@ -413,9 +422,9 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
 
               {previewCharacter.description && (
                 <div style={{
-                  background: '#fafafa', border: '1.5px solid #ececf0',
+                  background: dm.bg, border: `1.5px solid ${dm.border}`,
                   borderRadius: '12px', padding: '14px',
-                  fontSize: '14px', color: '#374151', lineHeight: '1.6',
+                  fontSize: '14px', color: dm.text, lineHeight: '1.6',
                 }}>
                   {previewCharacter.description}
                 </div>
@@ -424,16 +433,16 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
               <button
                 onClick={() => handleEdit(previewCharacter)}
                 style={{
-                  width: '100%', padding: '10px', border: '1.5px solid #ececf0',
-                  borderRadius: '10px', background: '#fff', cursor: 'pointer',
-                  fontSize: '14px', fontWeight: '500', color: '#111',
+                  width: '100%', padding: '10px', border: `1.5px solid ${dm.border}`,
+                  borderRadius: '10px', background: dm.card, cursor: 'pointer',
+                  fontSize: '14px', fontWeight: '500', color: dm.text,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                   transition: 'all 0.15s',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
-                onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+                onMouseEnter={e => (e.currentTarget.style.background = dm.hover)}
+                onMouseLeave={e => (e.currentTarget.style.background = dm.card)}
               >
-                <Edit2 size={14} color="#111" /> Edit Character
+                <Edit2 size={14} color={dm.text} /> Edit Character
               </button>
             </div>
           )}

@@ -34,6 +34,7 @@ Props: `{ onLogin: (username, password) => Promise<boolean>; loading: boolean; e
 
 ## `HomePage.tsx`
 Props: `{ user: AppUser; onLogout: () => void; onOpenProject: (project) => void }`. Owns its own `useProjects(user.id)`. Local state: `showNewModal`, `newName`, `creating`, `search`.
+- Layout: the ~480px left sidebar holds logo/user info, the search box, an "Add Project" button, and the scrollable project list (stacked `ProjectCard`s) — all below each other in that order. The right panel is a static placeholder ("Select a project to get started"); it no longer shows its own project grid or "New Project" button.
 - Search is a pure client-side case-insensitive substring filter over the already-fetched list — no server round trip per keystroke.
 - Empty states differ by cause: "No projects yet" (with a create CTA) vs. "No results found" (search active, no CTA).
 - Creating a project immediately calls `onOpenProject` — there's no intermediate "created" state, you land straight in canvas view.

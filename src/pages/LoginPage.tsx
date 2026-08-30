@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BookOpen, LogIn } from 'lucide-react';
+import { BookOpen, LogIn, Eye, EyeOff } from 'lucide-react';
 
 interface LoginPageProps {
   onLogin: (username: string, password: string) => Promise<boolean>;
@@ -99,6 +99,7 @@ const StoryCanvas: React.FC = () => {
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin, loading, error }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,16 +176,33 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, loading, error }) => {
             <label style={{ fontSize: 13, fontWeight: 600, color: '#444', display: 'block', marginBottom: 7 }}>
               Password
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Enter password"
-              autoComplete="current-password"
-              style={inputStyle}
-              onFocus={e => (e.currentTarget.style.borderColor = '#111')}
-              onBlur={e => (e.currentTarget.style.borderColor = '#ececf0')}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Enter password"
+                autoComplete="current-password"
+                style={{ ...inputStyle, paddingRight: 44 }}
+                onFocus={e => (e.currentTarget.style.borderColor = '#111')}
+                onBlur={e => (e.currentTarget.style.borderColor = '#ececf0')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                title={showPassword ? 'Hide password' : 'Show password'}
+                style={{
+                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', padding: 4,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#aaa', cursor: 'pointer', transition: 'color 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#111')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#aaa')}
+              >
+                {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+              </button>
+            </div>
           </div>
 
           {error && (
